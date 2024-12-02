@@ -1,123 +1,127 @@
-#define LEXER_H // conditional compilations(checks whether a macro is not defined)
+#ifndef LEXER_H // Prevent multiple inclusions of the header file
 #define LEXER_H
 
-#include "llvm/ADT/StringRef.h"        // encapsulates a pointer to a C string and its length
-#include "llvm/Support/MemoryBuffer.h" // read-only access to a block of memory, filled with the content of a file
+#include "llvm/ADT/StringRef.h"        // Provides a lightweight reference to a string
+#include "llvm/Support/MemoryBuffer.h" // Supports read-only access to file content in memory
 
+// Forward declaration of the Lexer class
 class Lexer;
 
-class Token
-{
-    friend class Lexer; // Lexer can access private and protected members of Token
+class Token{
+    friend class Lexer; // Grants the Lexer class access to Token's private members
 
 public:
-    enum TokenKind : unsigned short
-    {
-        eoi,            // end of input
-        unknown,        // in case of error at the lexical level
-        ident,          // identifier
-        number,         // integer literal
-        assign,         // =
-        minus_assign,   // -=
-        plus_assign,    // +=
-        star_assign,    // *=
-        slash_assign,   // /=
-        eq,             // ==
-        neq,            // !=
-        gt,             // >
-        lt,             // <
-        gte,            // >=
-        lte,            // <=
-        plus_plus,      // ++
-        minus_minus,    // --
-        start_comment,  // /*
-        end_comment,    // */
-        comma,          // ,
-        semicolon,      // ;
-        plus,           // +
-        minus,          // -
-        star,           // *
-        slash,          // /
-        mod,            // %
-        exp,            // ^
-        l_paren,        // (
-        minus_paren,    // -(
-        r_paren,        // )
-        l_brace,        // {
-        r_brace,        // }
-        KW_int,         // int
-        KW_bool,        // bool
-        KW_true,        // true
-        KW_false,       // false
-        KW_if,          // if
-        KW_else,        // else
-        KW_while,       // while
-        KW_for,         // for
-        KW_and,         // and
-        KW_or,          // or
-        KW_print,        // print
-        KW_xor,                  //xor        
-        KW_const,               //const               
-        KW_define,               // #define  
-        KW_float,                // float              
-        KW_var,                 // var                  
-        KW_min,                 //min
-        KW_max,                  //max
-        KW_mean,                  //mean
-        KW_switch,                  //switch
-        KW_case,                    //case
-        KW_default,                 //default
-        KW_break,                   //break
-        KW_continue,                 //continue
-        KW_do,          //do 
-        KW_in,          //in
-        KW_not,          //not
-        modules_assign,      // %=  
-        oneLine_comment,   // "//"  
-        left_bracket,          // [
-        right_bracket,          // ]   
-        questionMark,       // ?       //int a = x>y ? 1 : 2
-        colonMark,          //:        //int a = x>y ? 1 : 2 
-        floatNumber,
-
+    // Enumeration of token types (kinds of tokens)
+    enum TokenKind : unsigned short{
+        eoi,            // End of input
+        unknown,        // Unknown token (used for lexical errors)
+        ident,          // Identifier (e.g., variable names)
+        number,         // Numeric literal
+        assign,         // '=' (assignment operator)
+        minus_assign,   // '-=' (compound subtraction assignment)
+        plus_assign,    // '+=' (compound addition assignment)
+        star_assign,    // '*=' (compound multiplication assignment)
+        slash_assign,   // '/=' (compound division assignment)
+        eq,             // '==' (equality operator)
+        neq,            // '!=' (inequality operator)
+        gt,             // '>' (greater than)
+        lt,             // '<' (less than)
+        gte,            // '>=' (greater than or equal to)
+        lte,            // '<=' (less than or equal to)
+        plus_plus,      // '++' (increment operator)
+        minus_minus,    // '--' (decrement operator)
+        start_comment,  // '/*' (start of a comment)
+        end_comment,    // '*/' (end of a comment)
+        comma,          // ',' (comma separator)
+        semicolon,      // ';' (statement terminator)
+        plus,           // '+' (addition operator)
+        minus,          // '-' (subtraction operator)
+        star,           // '*' (multiplication operator)
+        slash,          // '/' (division operator)
+        mod,            // '%' (modulus operator)
+        exp,            // '^' (exponentiation operator)
+        l_paren,        // '(' (left parenthesis)
+        minus_paren,    // '-(' (negative expression start)
+        r_paren,        // ')' (right parenthesis)
+        l_brace,        // '{' (left brace)
+        r_brace,        // '}' (right brace)
+        KW_int,         // Keyword 'int'
+        KW_bool,        // Keyword 'bool'
+        KW_true,        // Keyword 'true'
+        KW_false,       // Keyword 'false'
+        KW_if,          // Keyword 'if'
+        KW_else,        // Keyword 'else'
+        KW_for,         // Keyword 'for'
+        KW_and,         // Keyword 'and'
+        KW_or,          // Keyword 'or'
+        KW_print,       // Keyword 'print'
+        KW_float,       // Keyword 'float' //TODO added for float variables
+        KW_var,         // Keyword 'var' //TODO added for dynamic typing
+        KW_const,       // Keyword 'const' //TODO added for constant variables  
+        KW_define,     // Keyword '#define' //TODO added for macros
+        KW_switch,      // Keyword 'switch' //TODO added for switch cases
+        KW_case,        // Keyword 'case' //TODO added for switch cases
+        KW_default,     // Keyword 'default' //TODO added for switch cases
+        KW_break,       // Keyword 'break' //TODO added for breaking out of loops
+        KW_continue,    // Keyword 'continue' //TODO added for skipping to the next iteration of loops
+        KW_do,          // Keyword 'do' //TODO added for do while loops
+        KW_while,       // Keyword 'while' //TODO added for do while loops
+        KW_min,         // Keyword 'min'   // TODO added for min function
+        KW_max,         // Keyword 'max' // TODO added for max function
+        KW_mean,        // Keyword 'mean' // TODO added for mean function
+        KW_sqrtN,       // Keyword 'sqrtN' // TODO added for sqrtN function
+        colon,          // ':' (for switch-case statements) //TODO added for switch-case statements
     };
 
 private:
-    TokenKind Kind;
-    llvm::StringRef Text; // points to the start of the text of the token
+    TokenKind Kind;          // The type of the token
+    llvm::StringRef Text;    // Textual representation of the token
 
 public:
+    // Accessor for the token's kind
     TokenKind getKind() const { return Kind; }
+
+    // Accessor for the token's text
     llvm::StringRef getText() const { return Text; }
 
-    // to test if the token is of a certain kind
+    // Check if the token matches a specific kind
     bool is(TokenKind K) const { return Kind == K; }
-    bool isOneOf(TokenKind K1, TokenKind K2) const
-    {
+
+    // Check if the token matches one of two kinds
+    bool isOneOf(TokenKind K1, TokenKind K2) const{
         return is(K1) || is(K2);
     }
+
+    // Check if the token matches any of a list of kinds
     template <typename... Ts>
-    bool isOneOf(TokenKind K1, TokenKind K2, Ts... Ks)
-        const { return is(K1) || isOneOf(K2, Ks...); }
+    bool isOneOf(TokenKind K1, TokenKind K2, Ts... Ks) const{
+        return is(K1) || isOneOf(K2, Ks...);
+    }
 };
 
-class Lexer
-{
-    const char *BufferStart; // pointer to the beginning of the input
-    const char *BufferPtr;   // pointer to the next unprocessed character
+class Lexer{
+    const char *BufferStart; // Pointer to the start of the input buffer
+    const char *BufferPtr;   // Pointer to the current unprocessed character in the buffer
 
 public:
-    Lexer(const llvm::StringRef &Buffer)
-    {
-        BufferStart = Buffer.begin();
-        BufferPtr = BufferStart;
+    // Constructor: Initializes the lexer with the input buffer
+    Lexer(const llvm::StringRef &Buffer){
+        BufferStart = Buffer.begin(); // Set the buffer start pointer
+        BufferPtr = BufferStart;      // Initialize the processing pointer to the start
     }
 
-    void next(Token &token); // return the next token
-    void setBufferPtr(const char* buffer);
-    const char* getBuffer(){return BufferPtr;};
+    // Retrieves the next token from the input stream
+    void next(Token &token);
+
+    // Allows the buffer pointer to be reset to a specific position
+    void setBufferPtr(const char *buffer);//TODO change from  void setBufferPtr(const char *buffer) { BufferPtr = buffer; }
+
+    // Getter for the current position of the buffer pointer
+    const char *getBuffer() { return BufferPtr; }
 
 private:
+    // Creates a token of the specified kind with the given range
     void formToken(Token &Result, const char *TokEnd, Token::TokenKind Kind);
 };
-#endif
+
+#endif // End of conditional compilation for LEXER_H

@@ -21,19 +21,12 @@ namespace charinfo
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
-    LLVM_READNONE inline bool isSpecialCharacter(char c)
-    {
-        return || c == '[' || c == ']' || c == '?' || c == ':' || c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '!' || c == '>' || c == '<' || c == '(' || c == ')' || c == '{' || c == '}'|| c == ',' || c == ';' || c == '%' || c == '^';
-    }
-
-    LLVM_READNONE inline bool isSharp(char c)
-    {
-        return (c=='#');
-    }
-
-    LLVM_READNONE inline bool isUnderScore(char c)
-    {
-        return (c=='_');
+    LLVM_READNONE inline bool isSpecialCharacter(char c){
+        return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' ||
+           c == '!' || c == '>' || c == '<' || c == '(' || c == ')' ||
+           c == '{' || c == '}' || c == ',' || c == ';' || c == '%' ||
+           c == '^' || c == '#'; // TODO added '#' for define
+        // return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '!' || c == '>' || c == '<' || c == '(' || c == ')' || c == '{' || c == '}'|| c == ',' || c == ';' || c == '%' || c == '^';
     }
 }
 
@@ -49,7 +42,7 @@ void Lexer::next(Token &token) {
     // collect characters and check for keywords or ident
     if (charinfo::isLetter(*BufferPtr)) {
         const char *end = BufferPtr + 1;
-        while (charinfo::isLetter(*end) || charinfo::isDigit(*end) || charinfo::isUnderScore(*end))
+        while (charinfo::isLetter(*end) || charinfo::isDigit(*end))
             ++end;
         llvm::StringRef Name(BufferPtr, end - BufferPtr);
         Token::TokenKind kind;
@@ -57,6 +50,34 @@ void Lexer::next(Token &token) {
             kind = Token::KW_int;
         else if (Name == "bool")
             kind = Token::KW_bool;
+        else if (Name == "float")               // TODO added for float type
+            kind = Token::KW_float;
+        else if (Name == "var")                 // TODO added for var type
+            kind = Token::KW_var;
+        else if (Name == "const")               // TODO added for constant variables
+            kind = Token::KW_const;
+        else if (Name == "define")              // TODO added for macros
+            kind = Token::KW_define;
+        else if (Name == "switch")              // TODO added for switch cases
+            kind = Token::KW_switch;
+        else if (Name == "case")                // TODO added for switch cases
+            kind = Token::KW_case;
+        else if (Name == "default")             // TODO added for default case in switch
+            kind = Token::KW_default;
+        else if (Name == "break")               // TODO added for breaking loops/switch
+            kind = Token::KW_break;
+        else if (Name == "continue")            // TODO added for skipping loop iteration
+            kind = Token::KW_continue;
+        else if (Name == "do")                  // TODO added for do-while loop
+            kind = Token::KW_do;
+        else if (Name == "min")                 // TODO added for min function
+            kind = Token::KW_min;
+        else if (Name == "max")                 // TODO added for max function
+            kind = Token::KW_max;
+        else if (Name == "mean")                // TODO added for mean function
+            kind = Token::KW_mean;
+        else if (Name == "sqrtN")               // TODO added for sqrtN function
+            kind = Token::KW_sqrtN;
         else if (Name == "print")
             kind = Token::KW_print;
         else if (Name == "while")
@@ -75,67 +96,16 @@ void Lexer::next(Token &token) {
             kind = Token::KW_and;
         else if (Name == "or")
             kind = Token::KW_or;
-        else if(Name == "do")
-            kind = Token::KW_do;
-        else if(Name == "in")
-            kind = Token::KW_in;
-        else if(Name == "not")
-            kind = Token::KW_not;
-        else if (Name == 'define')
-            kind = Token::KW_define;
-        else if(Name == "xor")
-            kind = Token::KW_xor;
-        else if(Name == "const")
-            kind = Token::KW_const;
-        else if(Name == "float")
-            kind = Token::KW_float;
-        else if(Name == "var")
-            kind = Token::KW_var;
-        else if(Name == "min")
-            kind = Token::KW_min;
-        else if(Name == "max")
-            kind = Token::KW_max;
-        else if(Name == "mean")
-            kind = Token::KW_mean;
-        else if(Name == "switch")
-            kind = Token::KW_switch;
-        else if(Name == "case")
-            kind = Token::KW_case;
-        else if(Name == "default")
-            kind = Token::KW_default;
-        else if(Name == "break")
-            kind = Token::KW_break;
-        else if(Name == "continue")
-            kind = Token::KW_continue;
         else
             kind = Token::ident;
+        // generate the token
         formToken(token, end, kind);
         return;
-    } else if (charinfo::isDigit(*BufferPtr) || (*BufferPtr == '.' && charinfo::isDigit(*(BufferPtr + 1)))) { // check for integers and float
-        // Process the integer part
-        while (charinfo::isDigit(*end)) {
+    } else if (charinfo::isDigit(*BufferPtr)) { // check for numbers
+        const char *end = BufferPtr + 1;
+        while (charinfo::isDigit(*end))
             ++end;
-        }
-
-        // Check for a decimal point
-        if (*end == '.') {
-            ++end;
-            isFloat = true;
-
-            // Process the fractional part
-            while (charinfo::isDigit(*end)) {
-                ++end;
-            }
-        }
-
-        // Validate if '.' is not followed by digits
-        if (*start == '.' && !isFloat) {
-            formToken(token, end, Token::unknown);
-            return;
-        }
-
-        // Decide token kind based on the presence of a fractional part
-        formToken(token, end, isFloat ? Token::floatNumber : Token::number);
+        formToken(token, end, Token::number);
         return;
     } else if (charinfo::isSpecialCharacter(*BufferPtr)) {
         const char *endWithOneLetter = BufferPtr + 1;
@@ -149,6 +119,10 @@ void Lexer::next(Token &token) {
             kind = Token::eq;
             isFound = true;
             end = endWithTwoLetter;
+        }else if (NameWithOneLetter == "#") {    // TODO added for define (#)
+            kind = Token::KW_define;
+            isFound = true;
+            end = endWithOneLetter;
         } else if (NameWithOneLetter == "=") {
             kind = Token::assign;
             isFound = true;
@@ -261,47 +235,11 @@ void Lexer::next(Token &token) {
             kind = Token::exp;
             isFound = true;
             end = endWithOneLetter;
-        }else if(NameWithOneLetter == "?"){ 
-            kind = Token::questionMark;
-            isFound = true;
-            end =endWithOneLetter;
-        } else if(NameWithOneLetter == ":"){ 
-            kind = Token::colonMark;
-            isFound = true;
-            end = endWithOneLetter;
-        }else if(NameWithOneLetter == "["){ 
-            kind = Token::l_bracket;
-            isFound = true;
-            end =endWithOneLetter;
-        } else if(NameWithOneLetter == "]"){
-            kind = Token::r_bracket;
-            isFound = true;
-            end = endWithOneLetter;
-        } else if(NameWithTwoLetter == "%="){ 
-            kind = Token::mod_assign;
-            isFound = true;
-            end = endWithTwoLetter;
-        } 
+        }
         
         // generate the token
         if (isFound) formToken(token, end, kind);
         else formToken(token, BufferPtr + 1, Token::unknown);
-        return;
-    } else if (charinfo::isSharp(*BufferPtr)) {  // Check for #define
-        const char *end = BufferPtr + 1;
-
-        // Consume letters following '#'
-        while (charinfo::isLetter(*end)) {
-            ++end;
-        }
-
-        llvm::StringRef Name(BufferPtr, end - BufferPtr);
-
-        if (Name == "#define") {
-            formToken(token, end, Token::KW_define);
-        } else {
-            formToken(token, BufferPtr + 1, Token::unknown);
-        }
         return;
     } else {
         formToken(token, BufferPtr + 1, Token::unknown); 
