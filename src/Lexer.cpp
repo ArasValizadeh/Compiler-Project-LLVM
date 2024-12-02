@@ -1,6 +1,6 @@
 #include "Lexer.h"
 #include "llvm/Support/raw_ostream.h"
-
+// xor, not, ?, in, [, ]
 // classifying characters
 namespace charinfo
 {
@@ -10,23 +10,27 @@ namespace charinfo
         return c == ' ' || c == '\t' || c == '\f' || c == '\v' ||
                c == '\r' || c == '\n';
     }
-
     LLVM_READNONE inline bool isDigit(char c)
     {
         return c >= '0' && c <= '9';
     }
-
     LLVM_READNONE inline bool isLetter(char c)
     {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
-
     LLVM_READNONE inline bool isSpecialCharacter(char c){
+        // TODO: 
         return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' ||
            c == '!' || c == '>' || c == '<' || c == '(' || c == ')' ||
            c == '{' || c == '}' || c == ',' || c == ';' || c == '%' ||
-           c == '^' || c == '#'; // TODO added '#' for define
+           c == '^' || c == ':' || c == '?' || c == '[' || c == ']'; // TODO added : , ?, [, ] 
         // return c == '=' || c == '+' || c == '-' || c == '*' || c == '/' || c == '!' || c == '>' || c == '<' || c == '(' || c == ')' || c == '{' || c == '}'|| c == ',' || c == ';' || c == '%' || c == '^';
+    }
+    LLVM_READNONE inline bool isSharp(char c){
+        return c == '#';
+    }
+    LLVM_READNONE inline bool isUnderScore (char c){
+        return c == '_';
     }
 }
 
@@ -50,6 +54,12 @@ void Lexer::next(Token &token) {
             kind = Token::KW_int;
         else if (Name == "bool")
             kind = Token::KW_bool;
+        else if (Name == "xor")            // TODO
+            kind = Token::KW_xor;
+        else if (Name == "not")             // TODO
+            kind = Token::KW_not;
+        else if (Name == "in")              // TODO
+            kind = Token::KW_in;
         else if (Name == "float")               // TODO added for float type
             kind = Token::KW_float;
         else if (Name == "var")                 // TODO added for var type
@@ -101,12 +111,36 @@ void Lexer::next(Token &token) {
         // generate the token
         formToken(token, end, kind);
         return;
-    } else if (charinfo::isDigit(*BufferPtr)) { // check for numbers
-        const char *end = BufferPtr + 1;
-        while (charinfo::isDigit(*end))
+    } else if (charinfo::isDigit(*BufferPtr) || (*BufferPtr == '.' && charinfo::isDigit(*(BufferPtr + 1)))) { // Check for integers and floats
+    const char *start = BufferPtr;  // Define start to point to the beginning of the token
+    const char *end = BufferPtr;    // Use end to iterate through the number
+    bool isFloat = false;           // Initialize isFloat to false
+
+    // Process the integer part
+    while (charinfo::isDigit(*end)) {
+        ++end;
+    }
+
+    // Check for a decimal point
+    if (*end == '.') {
+        ++end;
+        isFloat = true;
+
+        // Process the fractional part
+        while (charinfo::isDigit(*end)) {
             ++end;
-        formToken(token, end, Token::number);
+        }
+    }
+
+    // Validate if '.' is not followed by digits
+    if (isFloat && end == BufferPtr + 1) {  // Case where only '.' exists
+        formToken(token, end, Token::unknown);
         return;
+    }
+
+    // Decide token kind based on the presence of a fractional part
+    formToken(token, end, isFloat ? Token::floatNumber : Token::number);
+    return;
     } else if (charinfo::isSpecialCharacter(*BufferPtr)) {
         const char *endWithOneLetter = BufferPtr + 1;
         const char *endWithTwoLetter = BufferPtr + 2;
@@ -119,11 +153,7 @@ void Lexer::next(Token &token) {
             kind = Token::eq;
             isFound = true;
             end = endWithTwoLetter;
-        }else if (NameWithOneLetter == "#") {    // TODO added for define (#)
-            kind = Token::KW_define;
-            isFound = true;
-            end = endWithOneLetter;
-        } else if (NameWithOneLetter == "=") {
+        }else if (NameWithOneLetter == "=") {
             kind = Token::assign;
             isFound = true;
             end = endWithOneLetter;
@@ -223,7 +253,32 @@ void Lexer::next(Token &token) {
             kind = Token::semicolon;
             isFound = true;
             end = endWithOneLetter;
-        } else if (NameWithOneLetter == ","){
+        }else if (NameWithOneLetter = ":"){ // TODO
+            kind = Token::colon;
+            isFound = true;
+            end = endWithOneLetter;
+        } else if (NameWithOneLetter == "?"){ // TODO
+            kind = Token::questionmark;
+            isFound = true;
+            end = endWithOneLetter;
+        } else if (NameWithOneLetter == "["){ // TODO
+            kind = Token::l_squarebracket;
+            isFound = true;
+            end = endWithOneLetter;
+        } else if (NameWithOneLetter == "]"){ // TODO
+            kind = Token::r_squarebracket;
+            isFound = true;
+            end = endWithOneLetter;
+        } else if (NameWithTwoLetter == "%="){ // TODO
+            kind = Token::mod_assign;
+            isFound = true;
+            end = endWithTwoLetter;
+        }else if (NameWithTwoLetter == "//"){ // TODO
+            kind = Token::oneline_comment;
+            isFound = true;
+            end = endWithTwoLetter;
+        } 
+        else if (NameWithOneLetter == ","){
             kind = Token::comma;
             isFound = true;
             end = endWithOneLetter;
@@ -236,11 +291,28 @@ void Lexer::next(Token &token) {
             isFound = true;
             end = endWithOneLetter;
         }
-        
         // generate the token
         if (isFound) formToken(token, end, kind);
         else formToken(token, BufferPtr + 1, Token::unknown);
         return;
+    } else if (charinfo::isSharp(*BufferPtr)) {  // Check for preprocessing directives
+    const char *start = BufferPtr;  // Start at the current buffer pointer
+    const char *end = BufferPtr + 1;
+    while (charinfo::isLetter(*end)) 
+        ++end;
+
+    llvm::StringRef Name(BufferPtr, end - BufferPtr);  // Get the directive name
+    Token::TokenKind kind;
+
+    if (Name == "#define") {  // Match the directive `define`
+        kind = Token::KW_define;
+        formToken(token, end, kind);
+        return;
+    } else {
+        // Handle unknown directives or invalid cases
+        formToken(token, start, Token::unknown);
+        return;
+     }
     } else {
         formToken(token, BufferPtr + 1, Token::unknown); 
         return;         

@@ -71,6 +71,15 @@ public:
         KW_mean,        // Keyword 'mean' // TODO added for mean function
         KW_sqrtN,       // Keyword 'sqrtN' // TODO added for sqrtN function
         colon,          // ':' (for switch-case statements) //TODO added for switch-case statements
+        KW_xor,         // Keyword xor // TODO
+        KW_not,         // Keyword not // TODO
+        questionmark, //  ? // TODO
+        KW_in, //  in // TODO
+        l_squarebracket, //  [ // TODO
+        r_squarebracket, //  ] // TODO
+        mod_assign, // %= // TODO
+        oneline_comment, // "//" TODO
+        floatNumber, // floatnumber TODO
     };
 
 private:
