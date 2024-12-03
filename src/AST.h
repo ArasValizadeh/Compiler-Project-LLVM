@@ -197,11 +197,6 @@ public:
 
 //TODO
 // DeclarationVar represents a var (dynamically typed) variable declaration
-class DeclarationVar : public Program { // TODO added for var type
-    using VarVector = llvm::SmallVector<llvm::StringRef>;
-    using ValueVector = llvm::SmallVector<AST *>;
-    VarVector Vars;
-    ValueVector Values;
 
 // TODO
 class DefaultStmt : public AST {
@@ -217,6 +212,11 @@ public:
     }
 };
 
+class DeclarationVar : public Program { // TODO added for var type
+    using VarVector = llvm::SmallVector<llvm::StringRef>;
+    using ValueVector = llvm::SmallVector<AST *>;
+    VarVector Vars;
+    ValueVector Values;
 public:
     DeclarationVar(llvm::StringRef Var, AST* Value) 
         : Vars({Var}), Values({Value}) {}
