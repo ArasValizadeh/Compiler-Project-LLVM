@@ -724,6 +724,48 @@ public:
   }
 };
 
+// TODO
+// TernaryAssignment class represents a ternary operation in the AST
+class TernaryAssignment : public Expr {
+    Logic *Condition;    // Condition for the ternary operation
+    Expr *TrueExpr;      // Expression evaluated if condition is true
+    Expr *FalseExpr;     // Expression evaluated if condition is false
+
+public:
+    TernaryAssignment(Logic *Condition, Expr *TrueExpr, Expr *FalseExpr)
+        : Condition(Condition), TrueExpr(TrueExpr), FalseExpr(FalseExpr) {}
+
+    Logic *getCondition() { return Condition; }
+    Expr *getTrueExpr() { return TrueExpr; }
+    Expr *getFalseExpr() { return FalseExpr; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
+
+// TODO
+// BreakStmt class represents a break statement in the AST
+class BreakStmt : public Program {
+public:
+    BreakStmt() {}
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
+
+
+//TODO
+// ContinueStmt class represents a continue statement in the AST
+class ContinueStmt : public Program {
+public:
+    ContinueStmt() {}
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
 class PrintStmt : public Program
 {
 private:
