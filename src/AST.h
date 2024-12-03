@@ -32,7 +32,11 @@ class DoWhileStmt;       // TODO: Added forward declaration for do-while stateme
 class SwitchStmt;        // TODO: Added forward declaration for switch-case statement
 class CaseStmt;          // TODO: Added forward declaration for a single case in switch-case
 class FunctionCall;      // TODO: Added forward declaration for function call (min, max, mean, sqrtN)
-
+class Cast; // TODO: for castin
+class TernaryAssignment; // TODO: ternary operation
+class DefaultStmt; // TODO: defualt statment of switch case
+class BreakStmt; // TODO: break
+class ContinueStmt;// TODO: continue
 
 // ASTVisitor class defines a visitor pattern to traverse the AST
 class ASTVisitor
@@ -51,9 +55,6 @@ public:
   virtual void visit(Assignment &) = 0;      // Visit the assignment expression node
   virtual void visit(DeclarationInt &) = 0;     // Visit the variable declaration node
   virtual void visit(DeclarationBool &) = 0;     // Visit the variable declaration node
-  virtual void visit(DeclarationFloat &) = 0; // TODO added
-  virtual void visit(DeclarationVar &) = 0;   // TODO added
-  virtual void visit(DeclarationConst &) = 0; // TODO added
   virtual void visit(Comparison &) = 0;      // Visit the Comparison node
   virtual void visit(LogicalExpr &) = 0;     // Visit the LogicalExpr node
   virtual void visit(IfStmt &) = 0;          // Visit the IfStmt node
@@ -61,11 +62,19 @@ public:
   virtual void visit(elifStmt &) = 0;        // Visit the elifStmt node
   virtual void visit(ForStmt &) = 0;
   virtual void visit(PrintStmt &) = 0;
+  virtual void visit(DeclarationFloat &) = 0; // TODO added
+  virtual void visit(DeclarationVar &) = 0;   // TODO added
+  virtual void visit(DeclarationConst &) = 0; // TODO added
   virtual void visit(DefineStmt &) = 0;       // TODO added
   virtual void visit(SwitchStmt &) = 0;      // TODO added
   virtual void visit(CaseStmt &) = 0;        // TODO added
   virtual void visit(DoWhileStmt &) = 0;     // TODO added
   virtual void visit(FunctionCall &) = 0;    // TODO added
+  virtual void visit(TernaryAssignment &) = 0;    // TODO added
+  virtual void visit(DefaultStmt &) = 0;     // TODO added
+  virtual void visit(Cast &) = 0; // TODO added
+  virtual void visit(BreakStmt &) = 0; // TODO added
+  virtual void visit(ContinueStmt &) = 0; // TODO added
 };
 
 // AST class serves as the base class for all AST nodes
@@ -164,7 +173,7 @@ public:
     V.visit(*this);
   }
 };
-
+// TODO
 // DeclarationFloat represents a float variable declaration in the AST
 class DeclarationFloat : public Program { // TODO added for float type
     using VarVector = llvm::SmallVector<llvm::StringRef>;
@@ -186,22 +195,30 @@ public:
     }
 };
 
+//TODO
 // DeclarationVar represents a var (dynamically typed) variable declaration
 class DeclarationVar : public Program { // TODO added for var type
-    llvm::StringRef Var;
-    Expr *Value;
+    using VarVector = llvm::SmallVector<llvm::StringRef>;
+    using ValueVector = llvm::SmallVector<AST *>;
+    VarVector Vars;
+    ValueVector Values;
 
 public:
-    DeclarationVar(llvm::StringRef Var, Expr *Value) : Var(Var), Value(Value) {}
+    DeclarationVar(llvm::SmallVector<llvm::StringRef> Vars, llvm::SmallVector<AST *> Values)
+        : Vars(Vars), Values(Values){}
 
-    llvm::StringRef getVar() { return Var; }
-    Expr *getValue() { return Value; }
+    VarVector::const_iterator varBegin() const { return Vars.begin(); }
+    VarVector::const_iterator varEnd() const { return Vars.end(); }
+    ValueVector::const_iterator valBegin() const { return Values.begin(); }
+    ValueVector::const_iterator valEnd() const { return Values.end(); }
 
-    virtual void accept(ASTVisitor &V) override {
-        V.visit(*this); // TODO: Add a visitor method for DeclarationVar
+    virtual void accept(ASTVisitor &V) override
+    {
+        V.visit(*this);
     }
 };
 
+// TODO
 // DeclarationConst represents a constant variable declaration
 class DeclarationConst : public Program { // TODO added for constant variables
     llvm::StringRef Var;
@@ -218,6 +235,7 @@ public:
     }
 };
 
+// TODO
 // Final class represents a Final in the AST (either an identifier or a number or true or false)
 class Final : public Expr
 {
@@ -225,7 +243,9 @@ public:
   enum ValueKind
   {
     Ident,
-    Number
+    Number,
+    FloatNumber,  // Represents float literals
+    Bool 
   };
 
 private:
@@ -532,6 +552,7 @@ public:
   }
 };
 
+// TODO
 // DefineStmt represents a #define macro in the AST
 class DefineStmt : public Program { // TODO added for #define macros
     llvm::StringRef MacroName;
@@ -549,6 +570,25 @@ public:
     }
 };
 
+// class DeclareDefine : public Program
+// {
+// private:
+//     llvm::StringRef Name;   // Name of the constant
+//     Expr *Value;            // Value of the constant
+
+// public:
+//     DeclareDefine(llvm::StringRef Name, Expr *Value) : Name(Name), Value(Value) {}
+
+//     llvm::StringRef getName() { return Name; }
+//     Expr *getValue() { return Value; }
+
+//     virtual void accept(ASTVisitor &V) override
+//     {
+//         V.visit(*this);
+//     }
+// };
+
+// TODO
 // CaseStmt represents a single case in a switch statement
 class CaseStmt : public AST {
     Expr *CaseValue;
@@ -566,6 +606,7 @@ public:
     }
 };
 
+// TODO
 // SwitchStmt represents a switch-case construct in the AST
 class SwitchStmt : public Program { // TODO added for switch-case construct
     Logic *Cond;
@@ -585,6 +626,7 @@ public:
     }
 };
 
+// TODO
 // DoWhileStmt represents a do-while loop in the AST
 class DoWhileStmt : public Program { // TODO added for do-while loop
     llvm::SmallVector<AST *> Body;
@@ -602,6 +644,7 @@ public:
     }
 };
 
+// TODO
 // FunctionCall represents a function call in the AST
 class FunctionCall : public Expr { // TODO added for function calls like min(), max(), mean(), sqrtN()
     llvm::StringRef FuncName;
