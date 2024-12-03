@@ -203,6 +203,20 @@ class DeclarationVar : public Program { // TODO added for var type
     VarVector Vars;
     ValueVector Values;
 
+// TODO
+class DefaultStmt : public AST {
+    llvm::SmallVector<AST *> Body;
+
+public:
+    DefaultStmt(llvm::SmallVector<AST *> Body) : Body(Body) {}
+
+    llvm::SmallVector<AST *> getBody() { return Body; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
+
 public:
     DeclarationVar(llvm::SmallVector<llvm::StringRef> Vars, llvm::SmallVector<AST *> Values)
         : Vars(Vars), Values(Values){}
@@ -529,6 +543,21 @@ public:
   }
 };
 
+// TODO
+class Cast : public Expr {
+    Expr *Operand;
+    llvm::StringRef TargetType;
+
+public:
+    Cast(Expr *Operand, llvm::StringRef TargetType) : Operand(Operand), TargetType(TargetType) {}
+
+    Expr *getOperand() { return Operand; }
+    llvm::StringRef getTargetType() { return TargetType; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
 class WhileStmt : public Program
 {
 using BodyVector = llvm::SmallVector<AST *>;
