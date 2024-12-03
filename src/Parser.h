@@ -40,6 +40,9 @@ class Parser
         return false;
     }
 
+    BreakStmt *parseBreak();       // TODO Declaration for parsing break statements
+    ContinueStmt *parseContinue(); // TODO Declaration for parsing continue statements
+    Expr *parseTernary();  // TODO
     Program *parseProgram();
     DeclarationInt *parseIntDec();
     DeclarationBool *parseBoolDec();

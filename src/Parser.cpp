@@ -788,19 +788,22 @@ _error:
 }
 
 // TODO
+Expr *Parser::parseTernary() {
+    Logic *Condition = nullptr;  // Ensure the condition is of type Logic*
+    Expr *TrueExpr = nullptr;
+    Expr *FalseExpr = nullptr;
 
-Expr *Parser::parseTernary() { // TODO: Added for ternary operations
-    Logic *Condition = parseLogic();
+    Condition = parseLogic();  // Use parseLogic() to get a Logic* condition
     if (!Condition) goto _error;
 
     if (!consume(Token::questionmark)) goto _error;
 
-    Expr *TrueExpr = parseExpr();
+    TrueExpr = parseExpr();
     if (!TrueExpr) goto _error;
 
     if (!consume(Token::colon)) goto _error;
 
-    Expr *FalseExpr = parseExpr();
+    FalseExpr = parseExpr();
     if (!FalseExpr) goto _error;
 
     return new TernaryAssignment(Condition, TrueExpr, FalseExpr);
