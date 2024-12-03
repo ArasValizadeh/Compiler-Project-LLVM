@@ -37,6 +37,7 @@ namespace charinfo
 void Lexer::next(Token &token) {
     llvm::errs() << "Entering Lexer::next()\n"; //TODO Debug log
     while (*BufferPtr && charinfo::isWhitespace(*BufferPtr)) {
+        llvm::errs() << "Whitespace found. Skipping.\n"; //TODO Debug log
         ++BufferPtr;
     }
     // make sure we didn't reach the end of input

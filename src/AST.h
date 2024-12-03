@@ -218,8 +218,8 @@ public:
 };
 
 public:
-    DeclarationVar(llvm::SmallVector<llvm::StringRef> Vars, llvm::SmallVector<AST *> Values)
-        : Vars(Vars), Values(Values){}
+    DeclarationVar(llvm::StringRef Var, AST* Value) 
+        : Vars({Var}), Values({Value}) {}
 
     VarVector::const_iterator varBegin() const { return Vars.begin(); }
     VarVector::const_iterator varEnd() const { return Vars.end(); }

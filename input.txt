@@ -1,6 +1,4 @@
-float PI = 314;
-var r = 10;
-int x = 0;
+int x    = 0;
 int i=3;
 for (i = 1; i <= 5; i++) {
 	print(i);
