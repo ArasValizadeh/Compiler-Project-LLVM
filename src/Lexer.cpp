@@ -153,7 +153,15 @@ void Lexer::next(Token &token) {
             kind = Token::eq;
             isFound = true;
             end = endWithTwoLetter;
-        }else if (NameWithOneLetter == "=") {
+        }else if (NameWithTwoLetter == "//"){ // TODO
+            kind = Token::oneline_comment;
+            isFound = true;
+            end = endWithTwoLetter;
+        } else if (NameWithTwoLetter == "%="){ // TODO
+            kind = Token::mod_assign;
+            isFound = true;
+            end = endWithTwoLetter;
+        } else if (NameWithOneLetter == "=") {
             kind = Token::assign;
             isFound = true;
             end = endWithOneLetter;
@@ -269,15 +277,7 @@ void Lexer::next(Token &token) {
             kind = Token::r_squarebracket;
             isFound = true;
             end = endWithOneLetter;
-        } else if (NameWithTwoLetter == "%="){ // TODO
-            kind = Token::mod_assign;
-            isFound = true;
-            end = endWithTwoLetter;
-        }else if (NameWithTwoLetter == "//"){ // TODO
-            kind = Token::oneline_comment;
-            isFound = true;
-            end = endWithTwoLetter;
-        } 
+        }
         else if (NameWithOneLetter == ","){
             kind = Token::comma;
             isFound = true;
