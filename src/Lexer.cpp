@@ -35,12 +35,14 @@ namespace charinfo
 }
 
 void Lexer::next(Token &token) {
+    llvm::errs() << "Entering Lexer::next()\n"; //TODO Debug log
     while (*BufferPtr && charinfo::isWhitespace(*BufferPtr)) {
         ++BufferPtr;
     }
     // make sure we didn't reach the end of input
     if (!*BufferPtr) {
         token.Kind = Token::eoi;
+        llvm::errs() << "End of input reached. Token: Kind=eoi\n"; //TODO Debug log
         return;
     }
     // collect characters and check for keywords or ident
@@ -261,7 +263,7 @@ void Lexer::next(Token &token) {
             kind = Token::semicolon;
             isFound = true;
             end = endWithOneLetter;
-        }else if (NameWithOneLetter = ":"){ // TODO
+        }else if (NameWithOneLetter == ":"){ // TODO
             kind = Token::colon;
             isFound = true;
             end = endWithOneLetter;
@@ -329,5 +331,6 @@ void Lexer::formToken(Token &Tok, const char *TokEnd,
 {
     Tok.Kind = Kind;
     Tok.Text = llvm::StringRef(BufferPtr, TokEnd - BufferPtr);
+    llvm::errs() << "Token formed: Kind=" << Kind << ", Text=" << Tok.Text << "\n"; // Debug log
     BufferPtr = TokEnd;
 }
