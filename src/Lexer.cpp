@@ -2,6 +2,88 @@
 #include "llvm/Support/raw_ostream.h"
 // xor, not, ?, in, [, ]
 // classifying characters
+#include "Lexer.h"
+#include "llvm/Support/raw_ostream.h"
+
+// Include other relevant headers as needed
+
+// Function to convert TokenKind enum to a string
+std::string getTokenName(Token::TokenKind kind) {
+    switch (kind) {
+        case Token::eoi: return "eoi";
+        case Token::unknown: return "unknown";
+        case Token::ident: return "ident";
+        case Token::number: return "number";
+        case Token::assign: return "assign";
+        case Token::minus_assign: return "minus_assign";
+        case Token::plus_assign: return "plus_assign";
+        case Token::star_assign: return "star_assign";
+        case Token::slash_assign: return "slash_assign";
+        case Token::eq: return "eq";
+        case Token::neq: return "neq";
+        case Token::gt: return "gt";
+        case Token::lt: return "lt";
+        case Token::gte: return "gte";
+        case Token::lte: return "lte";
+        case Token::plus_plus: return "plus_plus";
+        case Token::minus_minus: return "minus_minus";
+        case Token::start_comment: return "start_comment";
+        case Token::end_comment: return "end_comment";
+        case Token::comma: return "comma";
+        case Token::semicolon: return "semicolon";
+        case Token::plus: return "plus";
+        case Token::minus: return "minus";
+        case Token::star: return "star";
+        case Token::slash: return "slash";
+        case Token::mod: return "mod";
+        case Token::exp: return "exp";
+        case Token::l_paren: return "l_paren";
+        case Token::minus_paren: return "minus_paren";
+        case Token::r_paren: return "r_paren";
+        case Token::l_brace: return "l_brace";
+        case Token::r_brace: return "r_brace";
+        case Token::KW_int: return "KW_int";
+        case Token::KW_bool: return "KW_bool";
+        case Token::KW_true: return "KW_true";
+        case Token::KW_false: return "KW_false";
+        case Token::KW_if: return "KW_if";
+        case Token::KW_else: return "KW_else";
+        case Token::KW_for: return "KW_for";
+        case Token::KW_and: return "KW_and";
+        case Token::KW_or: return "KW_or";
+        case Token::KW_print: return "KW_print";
+        case Token::KW_float: return "KW_float";
+        case Token::KW_var: return "KW_var";
+        case Token::KW_const: return "KW_const";
+        case Token::KW_define: return "KW_define";
+        case Token::KW_switch: return "KW_switch";
+        case Token::KW_case: return "KW_case";
+        case Token::KW_default: return "KW_default";
+        case Token::KW_break: return "KW_break";
+        case Token::KW_continue: return "KW_continue";
+        case Token::KW_do: return "KW_do";
+        case Token::KW_while: return "KW_while";
+        case Token::KW_min: return "KW_min";
+        case Token::KW_max: return "KW_max";
+        case Token::KW_mean: return "KW_mean";
+        case Token::KW_sqrtN: return "KW_sqrtN";
+        case Token::colon: return "colon";
+        case Token::KW_xor: return "KW_xor";
+        case Token::KW_not: return "KW_not";
+        case Token::questionmark: return "questionmark";
+        case Token::KW_in: return "KW_in";
+        case Token::l_squarebracket: return "l_squarebracket";
+        case Token::r_squarebracket: return "r_squarebracket";
+        case Token::mod_assign: return "mod_assign";
+        case Token::oneline_comment: return "oneline_comment";
+        case Token::floatNumber: return "floatNumber";
+        default: return "unknown";
+    }
+}
+
+// Existing functions in Lexer.cpp follow here
+
+
 namespace charinfo
 {
     // ignore whitespaces
@@ -35,15 +117,12 @@ namespace charinfo
 }
 
 void Lexer::next(Token &token) {
-    llvm::errs() << "Entering Lexer::next()\n"; //TODO Debug log
     while (*BufferPtr && charinfo::isWhitespace(*BufferPtr)) {
-        llvm::errs() << "Whitespace found. Skipping.\n"; //TODO Debug log
         ++BufferPtr;
     }
     // make sure we didn't reach the end of input
     if (!*BufferPtr) {
         token.Kind = Token::eoi;
-        llvm::errs() << "End of input reached. Token: Kind=eoi\n"; //TODO Debug log
         return;
     }
     // collect characters and check for keywords or ident
@@ -295,7 +374,9 @@ void Lexer::next(Token &token) {
             end = endWithOneLetter;
         }
         // generate the token
-        if (isFound) formToken(token, end, kind);
+        if (isFound){ 
+            formToken(token, end, kind);
+        }
         else formToken(token, BufferPtr + 1, Token::unknown);
         return;
     } else if (charinfo::isSharp(*BufferPtr)) {  // Check for preprocessing directives
@@ -332,8 +413,8 @@ void Lexer::formToken(Token &Tok, const char *TokEnd,
 {
     Tok.Kind = Kind;
     Tok.Text = llvm::StringRef(BufferPtr, TokEnd - BufferPtr);
-    llvm::errs() <<"------------------------------------------------------------------\n";
-    llvm::errs() << "Token formed: Kind: " << Kind << ", Text: " << Tok.Text << "\n"; // Debug log
-    llvm::errs() <<"------------------------------------------------------------------\n";
+    // llvm::errs() <<"------------------------------------------------------------------\n";
+    // llvm::errs() << "Token formed: Kind: " << Kind << ", Text: " << Tok.Text << "\n"; // Debug log
+    // llvm::errs() <<"------------------------------------------------------------------\n";
     BufferPtr = TokEnd;
 }

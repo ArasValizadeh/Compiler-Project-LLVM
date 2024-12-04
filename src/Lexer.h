@@ -13,73 +13,73 @@ class Token{
 public:
     // Enumeration of token types (kinds of tokens)
     enum TokenKind : unsigned short{
-        eoi,            // End of input
-        unknown,        // Unknown token (used for lexical errors)
-        ident,          // Identifier (e.g., variable names)
-        number,         // Numeric literal
-        assign,         // '=' (assignment operator)
-        minus_assign,   // '-=' (compound subtraction assignment)
-        plus_assign,    // '+=' (compound addition assignment)
-        star_assign,    // '*=' (compound multiplication assignment)
-        slash_assign,   // '/=' (compound division assignment)
-        eq,             // '==' (equality operator)
-        neq,            // '!=' (inequality operator)
-        gt,             // '>' (greater than)
-        lt,             // '<' (less than)
-        gte,            // '>=' (greater than or equal to)
-        lte,            // '<=' (less than or equal to)
-        plus_plus,      // '++' (increment operator)
-        minus_minus,    // '--' (decrement operator)
-        start_comment,  // '/*' (start of a comment)
-        end_comment,    // '*/' (end of a comment)
-        comma,          // ',' (comma separator)
-        semicolon,      // ';' (statement terminator)
-        plus,           // '+' (addition operator)
-        minus,          // '-' (subtraction operator)
-        star,           // '*' (multiplication operator)
-        slash,          // '/' (division operator)
-        mod,            // '%' (modulus operator)
-        exp,            // '^' (exponentiation operator)
-        l_paren,        // '(' (left parenthesis)
-        minus_paren,    // '-(' (negative expression start)
-        r_paren,        // ')' (right parenthesis)
-        l_brace,        // '{' (left brace)
-        r_brace,        // '}' (right brace)
-        KW_int,         // Keyword 'int'
-        KW_bool,        // Keyword 'bool'
-        KW_true,        // Keyword 'true'
-        KW_false,       // Keyword 'false'
-        KW_if,          // Keyword 'if'
-        KW_else,        // Keyword 'else'
-        KW_for,         // Keyword 'for'
-        KW_and,         // Keyword 'and'
-        KW_or,          // Keyword 'or'
-        KW_print,       // Keyword 'print'
-        KW_float,       // Keyword 'float' //TODO added for float variables
-        KW_var,         // Keyword 'var' //TODO added for dynamic typing
-        KW_const,       // Keyword 'const' //TODO added for constant variables  
-        KW_define,     // Keyword '#define' //TODO added for macros
-        KW_switch,      // Keyword 'switch' //TODO added for switch cases
-        KW_case,        // Keyword 'case' //TODO added for switch cases
-        KW_default,     // Keyword 'default' //TODO added for switch cases
-        KW_break,       // Keyword 'break' //TODO added for breaking out of loops
-        KW_continue,    // Keyword 'continue' //TODO added for skipping to the next iteration of loops
-        KW_do,          // Keyword 'do' //TODO added for do while loops
-        KW_while,       // Keyword 'while' //TODO added for do while loops
-        KW_min,         // Keyword 'min'   // TODO added for min function
-        KW_max,         // Keyword 'max' // TODO added for max function
-        KW_mean,        // Keyword 'mean' // TODO added for mean function
-        KW_sqrtN,       // Keyword 'sqrtN' // TODO added for sqrtN function
-        colon,          // ':' (for switch-case statements) //TODO added for switch-case statements
-        KW_xor,         // Keyword xor // TODO
-        KW_not,         // Keyword not // TODO
-        questionmark, //  ? // TODO
-        KW_in, //  in // TODO
-        l_squarebracket, //  [ // TODO
-        r_squarebracket, //  ] // TODO
-        mod_assign, // %= // TODO
-        oneline_comment, // "//" TODO
-        floatNumber, // floatnumber TODO
+        eoi,            // End of input //!0
+        unknown,        // Unknown token (used for lexical errors) //!1
+        ident,          // Identifier (e.g., variable names) //!2
+        number,         // Numeric literal //!3
+        assign,         // '=' (assignment operator) //!4
+        minus_assign,   // '-=' (compound subtraction assignment) //!5
+        plus_assign,    // '+=' (compound addition assignment) //!6
+        star_assign,    // '*=' (compound multiplication assignment) //!7
+        slash_assign,   // '/=' (compound division assignment) //!8
+        eq,             // '==' (equality operator) //!9
+        neq,            // '!=' (inequality operator) //!10
+        gt,             // '>' (greater than) //!11 
+        lt,             // '<' (less than) //!12
+        gte,            // '>=' (greater than or equal to) //!13
+        lte,            // '<=' (less than or equal to) //!14
+        plus_plus,      // '++' (increment operator) //!15
+        minus_minus,    // '--' (decrement operator) //!16
+        start_comment,  // '/*' (start of a comment) //!17 
+        end_comment,    // '*/' (end of a comment) //!18
+        comma,          // ',' (comma separator) //!19
+        semicolon,      // ';' (statement terminator) //!20
+        plus,           // '+' (addition operator) //!21
+        minus,          // '-' (subtraction operator) //!22
+        star,           // '*' (multiplication operator) //!23
+        slash,          // '/' (division operator) //!24
+        mod,            // '%' (modulus operator) //!25
+        exp,            // '^' (exponentiation operator) //!26
+        l_paren,        // '(' (left parenthesis) //!27
+        minus_paren,    // '-(' (negative expression start) //!28
+        r_paren,        // ')' (right parenthesis) //!29
+        l_brace,        // '{' (left brace) //!30
+        r_brace,        // '}' (right brace) //!31
+        KW_int,         // Keyword 'int' //!32
+        KW_bool,        // Keyword 'bool' //!33
+        KW_true,        // Keyword 'true' //!34
+        KW_false,       // Keyword 'false' //!35
+        KW_if,          // Keyword 'if' //!36
+        KW_else,        // Keyword 'else' //!37
+        KW_for,         // Keyword 'for' //!38
+        KW_and,         // Keyword 'and' //!39
+        KW_or,          // Keyword 'or' //!40
+        KW_print,       // Keyword 'print' //!41
+        KW_float,       // Keyword 'float' //TODO added for float variables 42
+        KW_var,         // Keyword 'var' //TODO added for dynamic typing 43
+        KW_const,       // Keyword 'const' //TODO added for constant variables 44 
+        KW_define,     // Keyword '#define' //TODO added for macros 45
+        KW_switch,      // Keyword 'switch' //TODO added for switch cases 46
+        KW_case,        // Keyword 'case' //TODO added for switch cases 47
+        KW_default,     // Keyword 'default' //TODO added for switch cases 48
+        KW_break,       // Keyword 'break' //TODO added for breaking out of loops 49
+        KW_continue,    // Keyword 'continue' //TODO added for skipping to the next iteration of loops 50
+        KW_do,          // Keyword 'do' //TODO added for do while loops 51
+        KW_while,       // Keyword 'while' //TODO added for do while loops 52
+        KW_min,         // Keyword 'min'   // TODO added for min function 53
+        KW_max,         // Keyword 'max' // TODO added for max function 54
+        KW_mean,        // Keyword 'mean' // TODO added for mean function 55
+        KW_sqrtN,       // Keyword 'sqrtN' // TODO added for sqrtN function 56
+        colon,          // ':' (for switch-case statements) //TODO added for switch-case statements 57
+        KW_xor,         // Keyword xor // TODO 58
+        KW_not,         // Keyword not // TODO 59
+        questionmark, //  ? // TODO 60
+        KW_in, //  in // TODO 61
+        l_squarebracket, //  [ // TODO 62
+        r_squarebracket, //  ] // TODO 63
+        mod_assign, // %= // TODO 64
+        oneline_comment, // "//" TODO //!65
+        floatNumber, // floatnumber TODO //!66
     };
 
 private:
@@ -132,5 +132,6 @@ private:
     // Creates a token of the specified kind with the given range
     void formToken(Token &Result, const char *TokEnd, Token::TokenKind Kind);
 };
+std::string getTokenName(Token::TokenKind kind);
 
 #endif // End of conditional compilation for LEXER_H

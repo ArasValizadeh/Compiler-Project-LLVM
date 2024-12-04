@@ -16,7 +16,6 @@ static llvm::cl::opt<std::string>
 
 // Main function of the program
 int main(int argc, const char **argv){
-    llvm::errs() << "call main function in Compiler.cpp\n"; //TODO Debug log
     // Initialize the LLVM framework with the given command-line arguments
     llvm::InitLLVM X(argc, argv);
 
@@ -24,9 +23,7 @@ int main(int argc, const char **argv){
     llvm::cl::ParseCommandLineOptions(argc, argv, "Simple Compiler\n");
 
     // Create a Lexer object initialized with the input expression from the command line
-    llvm::errs() << "before Lexer\n"; //TODO Debug log
     Lexer Lex(Input);
-    llvm::errs() << "after Lexer\n"; //TODO Debug log
 
     // Create a Parser object initialized with the Lexer
     Parser Parser(Lex);

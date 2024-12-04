@@ -878,30 +878,34 @@ IfStmt *Parser::parseIf()
 
 
     if (expect(Token::KW_if)){
+        llvm::errs() <<"here in if i'm wrong\n";
         goto _error;
     }
 
     advance();
 
     if (expect(Token::l_paren)){
+        llvm::errs() <<"here in ( i'm wrong\n";
         goto _error;
     }
 
     advance();
 
     Cond = parseLogic();
-    if (Cond == nullptr)
-    {
+    if (Cond == nullptr){
+        llvm::errs() <<"here in condition i'm wrong\n";
         goto _error;
     }
 
     if (expect(Token::r_paren)){
+        llvm::errs() <<"here in ) i'm wrong\n";
         goto _error;
     }
         
     advance();
 
     if (expect(Token::l_brace)){
+        llvm::errs() <<"here in { i'm wrong\n";
         goto _error;
     }
 
@@ -909,9 +913,10 @@ IfStmt *Parser::parseIf()
     
     ifStmts = getBody();
         
-    if(ifStmts.empty())
+    if(ifStmts.empty()){
+        llvm::errs() <<"here in body i'm wrong\n";
         goto _error;
-    
+    }
     prev_token_if = Tok;
     prev_buffer_if = Lex.getBuffer();
     
@@ -928,6 +933,7 @@ IfStmt *Parser::parseIf()
                 advance();
                 
                 if (expect(Token::l_paren)){
+                    llvm::errs() <<"here in ( for else i'm wrong\n";
                     goto _error;
                 }
 
@@ -937,16 +943,18 @@ IfStmt *Parser::parseIf()
 
                 if (Cond == nullptr)
                 {
+                    llvm::errs() <<"here in condition for else i'm wrong\n";
                     goto _error;
                 }
-
                 if (expect(Token::r_paren)){
+                    llvm::errs() <<"here in ) for else i'm wrong\n";
                     goto _error;
                 }
 
                 advance();
 
                 if (expect(Token::l_brace)){
+                    llvm::errs() <<"here in { i'm wrong\n";
                     goto _error;
                 }
 
@@ -969,6 +977,7 @@ IfStmt *Parser::parseIf()
                 hasElse = true;
 
                 if (expect(Token::l_brace)){
+                    llvm::errs() <<"here in { for else if i'm wrong\n";
                     goto _error;
                 }
 
@@ -1057,28 +1066,53 @@ DoWhileStmt *Parser::parseDoWhile() {// TODO added for do-while loop
     llvm::SmallVector<AST *> Body;
     Logic *Cond = nullptr;
 
-    if (expect(Token::KW_do)) goto _error;
+    if (expect(Token::KW_do)){ 
+        llvm::errs() << "here in keyword do\n"; //TODO Debug log
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::l_brace)) goto _error;
+    if (expect(Token::l_brace)){
+        llvm::errs() << "here in {\n"; //TODO Debug log
+        goto _error;
+    }
     advance();
 
     Body = getBody();
-    if (Body.empty()) goto _error;
-
-    if (expect(Token::KW_while)) goto _error;
+    if (Body.empty()){
+        llvm::errs() << "here in body\n"; //TODO Debug log
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::l_paren)) goto _error;
+    if (expect(Token::KW_while)){
+        llvm::errs() << "here in keyword while\n"; //TODO Debug log
+        goto _error;
+    }
+    advance();
+
+    if (expect(Token::l_paren)){
+        llvm::errs() << "here in (\n"; //TODO Debug log
+        goto _error;
+    }
     advance();
 
     Cond = parseLogic();
-    if (!Cond) goto _error;
+    if (!Cond){
+        llvm::errs() << "here in condition of while\n"; //TODO Debug log
+        goto _error;
+    }
 
-    if (expect(Token::r_paren)) goto _error;
+    if (expect(Token::r_paren)){
+        llvm::errs() << "here in )\n"; //TODO Debug log
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::semicolon)) goto _error;
+    if (expect(Token::semicolon)){
+        llvm::errs() << "here in semicolon\n"; //TODO Debug log
+        goto _error;
+    }
     return new DoWhileStmt(Body, Cond);
 
 _error:

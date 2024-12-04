@@ -1,10 +1,4 @@
-int x    = 0;
-int i=3;
-for (i = 1; i <= 5; i++) {
-	print(i);
-	x = i;
-}
-print(i);
-/* 6 */
-print(x);
-/* 5 */
+float a = 1.23;
+int b = int(a);
+int c = 1;
+bool d = bool(c);
