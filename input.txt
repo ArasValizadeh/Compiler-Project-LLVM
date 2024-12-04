@@ -1,4 +1,16 @@
-float a = 1.23;
-int b = int(a);
-int c = 1;
-bool d = bool(c);
+int x = 1;
+switch (x)
+{
+	case 1:
+		x = x + 1;
+		break;
+	case 2:
+		x = x + 2;
+		break;
+	case 3:
+		x = x + 3;
+		break;
+	default:
+		x = x + 30;
+		break;
+}

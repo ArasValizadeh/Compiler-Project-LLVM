@@ -13,19 +13,20 @@ class Parser
 
     void error()
     {
-        llvm::errs() << "Unexpected: " << Tok.getText() << Tok.getKind() << "\n";
+        llvm::errs() << "Unexpected: " << Tok.getText() <<" and kind: "<< Tok.getKind() << "\n";
         HasError = true;
     }
 
     // retrieves the next token from the lexer.expect()
     // tests whether the look-ahead is of the expected kind
     void advance() { 
-        //llvm::errs() << "Consuming Token: " << getTokenName(Tok.getKind()) << " Text:" << Tok.getText() << "\n";
+        llvm::errs() << "Consuming Token: " << getTokenName(Tok.getKind()) << " Text:" << Tok.getText() << "\n";
         Lex.next(Tok); 
         }
 
     bool expect(Token::TokenKind Kind)
     {
+        //llvm::errs()<<"kind: " << Tok.getKind() << " and text is: " <<Tok.getText()<<"\n";
         if (Tok.getKind() != Kind)
         {
             //error();
@@ -69,6 +70,8 @@ class Parser
     IfStmt *parseIf();
     WhileStmt *parseWhile();
     ForStmt *parseFor();
+    BreakStmt *parseBreak();       // TODO Parses 'break' statements
+    ContinueStmt *parseContinue(); // TODO Parses 'continue' statements
     PrintStmt *parsePrint();
     void parseComment();
     llvm::SmallVector<AST *> getBody();

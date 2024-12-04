@@ -635,20 +635,34 @@ public:
     }
 };
 
+class DefaultStmt : public AST { // TODO for default statement in switch case
+    llvm::SmallVector<AST *> Body;
+
+public:
+    DefaultStmt(llvm::SmallVector<AST *> Body) : Body(Body) {}
+
+    llvm::SmallVector<AST *> getBody() { return Body; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this); // Visit the default statement
+    }
+};
+
+
 // TODO
 // SwitchStmt represents a switch-case construct in the AST
 class SwitchStmt : public Program { // TODO added for switch-case construct
     Logic *Cond;
     llvm::SmallVector<CaseStmt *> Cases;
-    llvm::SmallVector<AST *> DefaultBody;
+    DefaultStmt *Default; // TODO Changed to DefaultStmt pointer
 
 public:
-    SwitchStmt(Logic *Cond, llvm::SmallVector<CaseStmt *> Cases, llvm::SmallVector<AST *> DefaultBody)
-        : Cond(Cond), Cases(Cases), DefaultBody(DefaultBody) {}
+     SwitchStmt(Logic *Cond, llvm::SmallVector<CaseStmt *> Cases, DefaultStmt *Default)
+        : Cond(Cond), Cases(Cases), Default(Default) {}
 
     Logic *getCondition() { return Cond; }
     llvm::SmallVector<CaseStmt *> getCases() { return Cases; }
-    llvm::SmallVector<AST *> getDefaultBody() { return DefaultBody; }
+    DefaultStmt *getDefault() { return Default; } // TODO Getter for the default case
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for SwitchStmt

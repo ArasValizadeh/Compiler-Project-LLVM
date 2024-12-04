@@ -1015,47 +1015,75 @@ _error:
 SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
     Logic *Cond = nullptr;
     llvm::SmallVector<CaseStmt *> Cases;
+    DefaultStmt *Default = nullptr; // Declare Default as a pointer to DefaultStmt
     llvm::SmallVector<AST *> DefaultBody;
-
-    if (expect(Token::KW_switch)) goto _error;
+    if (expect(Token::KW_switch)){
+        llvm::errs() << "i'm here in switch\n";
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::l_paren)) goto _error;
+    if (expect(Token::l_paren)){
+            llvm::errs() << "i'm here in (\n";
+            goto _error;
+    }
     advance();
 
     Cond = parseLogic();
-    if (!Cond) goto _error;
+    if (!Cond){
+        llvm::errs() << "i'm here in condition of switch\n";
+        goto _error;
+    }
 
-    if (expect(Token::r_paren)) goto _error;
+    if (expect(Token::r_paren)){
+        llvm::errs() << "i'm here in )\n";
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::l_brace)) goto _error;
+    if (expect(Token::l_brace)){
+        llvm::errs() << "i'm here in {\n";
+        goto _error;
+    }
     advance();
 
     while (Tok.is(Token::KW_case)) {
         advance();
 
         Expr *CaseValue = parseExpr();
-        if (!CaseValue) goto _error;
-
-        if (expect(Token::colon)) goto _error;
+        if (!CaseValue){ 
+            llvm::errs() << "the value of case\n";
+            goto _error;
+        }
+        if (expect(Token::colon)){
+            llvm::errs() << "here i should see a :\n";
+            goto _error;
+        }
         advance();
 
         llvm::SmallVector<AST *> CaseBody = getBody();
         Cases.push_back(new CaseStmt(CaseValue, CaseBody));
     }
 
-    if (Tok.is(Token::KW_default)) {
+    if (Tok.is(Token::KW_default)) { // TODO
         advance();
-        if (expect(Token::colon)) goto _error;
+        if (expect(Token::colon)) {
+            llvm::errs() << "didn't see : after default\n";
+            goto _error;
+        }
         advance();
-        DefaultBody = getBody();
+        llvm::SmallVector<AST *> DefaultBody = getBody();
+        Default = new DefaultStmt(DefaultBody); // Wrap the body in DefaultStmt 
+    } else {
+        Default = nullptr; // No default case
     }
 
-    if (expect(Token::r_brace)) goto _error;
-    advance();
-
-    return new SwitchStmt(Cond, Cases, DefaultBody);
+    if (expect(Token::r_brace)){
+        llvm::errs() << "for }\n";
+        goto _error;
+    }
+    
+    return new SwitchStmt(Cond, Cases, Default);
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();
@@ -1327,6 +1355,57 @@ _error:
 
 }
 
+BreakStmt *Parser::parseBreak() { //TODO
+    // Expect and consume the 'break' keyword
+    if (expect(Token::KW_break)) {
+        llvm::errs() << "Expected 'break' keyword but not found\n";
+        goto _error;
+    }
+    advance();
+
+    // Expect and consume a semicolon after the 'break' keyword
+    if (expect(Token::semicolon)) {
+        llvm::errs() << "Expected ';' after 'break'\n";
+        goto _error;
+    }
+    advance();
+
+    return new BreakStmt();
+
+_error:
+    // Error handling: consume tokens until end-of-input or recovery point
+    while (Tok.getKind() != Token::eoi) {
+        advance();
+    }
+    return nullptr;
+}
+
+ContinueStmt *Parser::parseContinue() { // TODO
+    // Expect and consume the 'continue' keyword
+    if (expect(Token::KW_continue)) {
+        llvm::errs() << "Expected 'continue' keyword but not found\n";
+        goto _error;
+    }
+    advance();
+
+    // Expect and consume a semicolon after the 'continue' keyword
+    if (expect(Token::semicolon)) {
+        llvm::errs() << "Expected ';' after 'continue'\n";
+        goto _error;
+    }
+    advance();
+
+    return new ContinueStmt();
+
+_error:
+    // Error handling: consume tokens until end-of-input or recovery point
+    while (Tok.getKind() != Token::eoi) {
+        advance();
+    }
+    return nullptr;
+}
+
+
 void Parser::parseComment()
 {
     if (expect(Token::start_comment)) {
@@ -1341,6 +1420,8 @@ _error:
     while (Tok.getKind() != Token::eoi)
         advance();
 }
+
+
 
 llvm::SmallVector<AST *> Parser::getBody()
 {
@@ -1435,6 +1516,24 @@ llvm::SmallVector<AST *> Parser::getBody()
             if (f)
                 body.push_back(f);
             else {
+                goto _error;
+            }
+            break;
+        }
+        case Token::KW_break: { // Added for `break`
+            BreakStmt *b = parseBreak();
+            if (b) {
+                body.push_back(b);
+            } else {
+                goto _error;
+            }
+            break;
+        }
+        case Token::KW_continue: { // Added for `continue`
+            ContinueStmt *c = parseContinue();
+            if (c) {
+                body.push_back(c);
+            } else {
                 goto _error;
             }
             break;

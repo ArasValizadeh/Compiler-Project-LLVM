@@ -412,11 +412,18 @@ public:
     // if (Node.hasDefault()) {
     //     Node.getDefault()->accept(*this); // Check default body
     // }
-    if (!Node.getDefaultBody().empty()) { // TODO Check if default body exists. old changes are commented.
-      for (AST *Stmt : Node.getDefaultBody()) {
-          Stmt->accept(*this); // Visit each statement in the default body
-      } 
-    }
+    // if (!Node.getDefaultBody().empty()) { // TODO Check if default body exists. old changes are commented.
+    //   for (AST *Stmt : Node.getDefaultBody()) {
+    //       Stmt->accept(*this); // Visit each statement in the default body
+    //   } 
+    // }
+    DefaultStmt *Default = Node.getDefault(); //TODO
+    if (Default && !Default->getBody().empty()) { // Check if Default exists and its body is not empty
+    for (AST *Stmt : Default->getBody()) {
+        Stmt->accept(*this); // Visit each statement in the default body
+    } 
+}
+
 
   }
 
