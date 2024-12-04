@@ -74,49 +74,55 @@ public:
 
   // Visit function for BinaryOp nodes
   virtual void visit(BinaryOp &Node) override {
-    Expr* right = Node.getRight();
-    Expr* left = Node.getLeft();
-    if (left)
-      left->accept(*this);
-    else
-      HasError = true;
+    Expr *left = Node.getLeft();
+    Expr *right = Node.getRight();
 
-    if (right)
-      right->accept(*this);
-    else
-      HasError = true;
-
-    Final* l = (Final*)left;
-    if (l->getKind() == Final::Ident){
-      if (BoolScope.find(l->getVal()) != BoolScope.end()) {
-        llvm::errs() << "Cannot use binary operation on a boolean variable: " << l->getVal() << "\n";
+    // Check left operand
+    if (left) {
+        left->accept(*this);
+    } else {
+        llvm::errs() << "Left operand is missing in binary operation.\n";
         HasError = true;
-      }
+        return;
     }
 
-    Final* r = (Final*)right;
-    if (r->getKind() == Final::Ident){
-      if (BoolScope.find(r->getVal()) != BoolScope.end()) {
-        llvm::errs() << "Cannot use binary operation on a boolean variable: " << r->getVal() << "\n";
+    // Check right operand
+    if (right) {
+        right->accept(*this);
+    } else {
+        llvm::errs() << "Right operand is missing in binary operation.\n";
         HasError = true;
-      }
+        return;
     }
-    
 
-    if (Node.getOperator() == BinaryOp::Operator::Div || Node.getOperator() == BinaryOp::Operator::Mod ) {
-      Final* f = (Final*)right;
-
-      if (f->getKind() == Final::ValueKind::Number) {
-        llvm::StringRef intval = f->getVal();
-
-        if (intval == "0") {
-          llvm::errs() << "Division by zero is not allowed." << "\n";
-          HasError = true;
+    // Helper function to check for boolean variables
+    auto checkBooleanOperand = [this](Expr *operand, const char *side) {
+        Final *finalOperand = dynamic_cast<Final *>(operand);
+        if (finalOperand && finalOperand->getKind() == Final::Ident) {
+            if (BoolScope.find(finalOperand->getVal()) != BoolScope.end()) {
+                llvm::errs() << "Cannot use binary operation on a boolean variable (" 
+                             << side << " operand): " << finalOperand->getVal() << "\n";
+                HasError = true;
+            }
         }
-      }
+    };
+
+    checkBooleanOperand(left, "left");
+    checkBooleanOperand(right, "right");
+
+    // Check for division or modulus by zero
+    if (Node.getOperator() == BinaryOp::Operator::Div || 
+        Node.getOperator() == BinaryOp::Operator::Mod) {
+        Final *finalRight = dynamic_cast<Final *>(right);
+        if (finalRight && finalRight->getKind() == Final::ValueKind::Number) {
+            llvm::StringRef intval = finalRight->getVal();
+            if (intval == "0") {
+                llvm::errs() << "Division or modulus by zero is not allowed.\n";
+                HasError = true;
+            }
+        }
     }
-    
-  };
+  }
 
   // Visit function for Assignment nodes
  virtual void visit(Assignment &Node) override {
@@ -271,31 +277,34 @@ public:
     
   };
 
-virtual void visit(DeclarationVar &Node) override {
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I){
-      (*I)->accept(*this); // If the Declaration node has an expression, recursively visit the expression node
-    }
-    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
+
+  virtual void visit(DeclarationVar &Node) override {
+    // Iterate over the values (initializers)
+    for (DeclarationVar::ValueVector::const_iterator I = Node.valBegin(), 
+                                                     E = Node.valEnd(); 
+         I != E; 
          ++I) {
-      if(FloatScope.find(*I) != FloatScope.end()){
-        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
-        HasError = true; 
-      }
-      else if(IntScope.find(*I) != IntScope.end()){
-        llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
-        HasError = true; 
-      }
-      if(BoolScope.find(*I) != BoolScope.end()){
-        llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
-        HasError = true; 
-      }
-      else{
-        if (!BoolScope.insert(*I).second)
-          error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
-      }
+        if (*I) { // Check if the value is not null
+            (*I)->accept(*this); // Visit initializer expressions
+        }
     }
-    
-  };
+
+    // Iterate over the variables
+    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), 
+                                                            E = Node.varEnd(); 
+         I != E; 
+         ++I) {
+        if (IntScope.find(*I) != IntScope.end() || 
+            BoolScope.find(*I) != BoolScope.end() || 
+            FloatScope.find(*I) != FloatScope.end()) {
+            llvm::errs() << "Variable " << *I << " is already declared as a specific type.\n";
+            HasError = true;
+        } else {
+            VarScope.insert(*I); // Add variable to dynamically typed scope
+        }
+    }
+  }
+
 
   virtual void visit(Comparison &Node) override {
     if(Node.getLeft()){
@@ -425,7 +434,7 @@ virtual void visit(DeclarationVar &Node) override {
   virtual void visit(SignedNumber &Node) override {
   };
 
-  virtual void visit(DeclarationConst &Node) override {// TODO: add implementation
+virtual void visit(DeclarationConst &Node) override {// TODO: add implementation
     Node.getInitializer()->accept(*this); // Check initializer expression
 
     if (ConstScope.find(Node.getConstName()) != ConstScope.end()) {

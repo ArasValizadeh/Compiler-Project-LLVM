@@ -736,13 +736,15 @@ Expr *Parser::parseExpr()
         goto _error;
     }
     
-    while (Tok.isOneOf(Token::plus, Token::minus))
+    while (Tok.isOneOf(Token::plus, Token::minus, Token::KW_xor))
     {
         BinaryOp::Operator Op;
         if (Tok.is(Token::plus))
             Op = BinaryOp::Plus;
         else if (Tok.is(Token::minus))
             Op = BinaryOp::Minus;
+        else if (Tok.is(Token::KW_xor))
+            Op = BinaryOp::Xor; // Handle xor
         else {
             llvm::errs() << "balaye dovomin error() dakhele parse expression\n";
             error();
