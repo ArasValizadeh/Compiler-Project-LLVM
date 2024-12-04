@@ -271,6 +271,32 @@ public:
     
   };
 
+virtual void visit(DeclarationVar &Node) override {
+    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I){
+      (*I)->accept(*this); // If the Declaration node has an expression, recursively visit the expression node
+    }
+    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
+         ++I) {
+      if(FloatScope.find(*I) != FloatScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
+        HasError = true; 
+      }
+      else if(IntScope.find(*I) != IntScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
+        HasError = true; 
+      }
+      if(BoolScope.find(*I) != BoolScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
+        HasError = true; 
+      }
+      else{
+        if (!BoolScope.insert(*I).second)
+          error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
+      }
+    }
+    
+  };
+
   virtual void visit(Comparison &Node) override {
     if(Node.getLeft()){
       Node.getLeft()->accept(*this);
@@ -398,33 +424,6 @@ public:
 
   virtual void visit(SignedNumber &Node) override {
   };
-
-  virtual void visit(DeclarationVar &Node) override {
-    // Iterate over the values (initializers)
-    for (DeclarationVar::ValueVector::const_iterator I = Node.valBegin(), 
-                                                     E = Node.valEnd(); 
-         I != E; 
-         ++I) {
-        if (*I) { // Check if the value is not null
-            (*I)->accept(*this); // Visit initializer expressions
-        }
-    }
-
-    // Iterate over the variables
-    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), 
-                                                            E = Node.varEnd(); 
-         I != E; 
-         ++I) {
-        if (IntScope.find(*I) != IntScope.end() || 
-            BoolScope.find(*I) != BoolScope.end() || 
-            FloatScope.find(*I) != FloatScope.end()) {
-            llvm::errs() << "Variable " << *I << " is already declared as a specific type.\n";
-            HasError = true;
-        } else {
-            VarScope.insert(*I); // Add variable to dynamically typed scope
-        }
-    }
-  }
 
   virtual void visit(DeclarationConst &Node) override {// TODO: add implementation
     Node.getInitializer()->accept(*this); // Check initializer expression

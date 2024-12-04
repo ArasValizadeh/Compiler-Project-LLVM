@@ -31,6 +31,8 @@ if [[ -n "$SPECIFIC_FILE" ]]; then
             echo "✅ $filename: Compilation successful"
         elif echo "$output" | grep -q "Syntax error"; then
             echo "❌ $filename: Syntax error"
+        elif echo "$output" | grep -q "semantic is correct"; then
+            echo "✅ $filename: Compilation successful (code gen errors are ignored)"
         else
             echo "✅ $filename: Compilation successful (ignored semantic errors)"
         fi
@@ -54,6 +56,8 @@ else
                 echo "✅ $filename: Compilation successful"
             elif echo "$output" | grep -q "Syntax error"; then
                 echo "❌ $filename: Syntax error"
+            elif echo "$output" | grep -q "semantic is correct"; then
+                echo "✅ $filename: Compilation successful (semantic is correct)"
             else
                 echo "✅ $filename: Compilation successful (ignored semantic errors)"
             fi
