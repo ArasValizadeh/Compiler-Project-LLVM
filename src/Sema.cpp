@@ -379,11 +379,11 @@ public:
   }
 
   virtual void visit(DefineStmt &Node) override {// TODO: add implementation
-    if (DefineScope.find(Node.getDefineName()) != DefineScope.end()) {
-        llvm::errs() << "Macro " << Node.getDefineName() << " is already defined." << "\n";
+    if (DefineScope.find(Node.getMacroName()) != DefineScope.end()) {
+        llvm::errs() << "Macro " << Node.getMacroName() << " is already defined." << "\n";
         HasError = true;
     } else {
-        DefineScope.insert(Node.getDefineName()); // Add macro to scope
+        DefineScope.insert(Node.getMacroName()); // Add macro to scope
     }
   }
 
@@ -392,19 +392,32 @@ public:
 
     llvm::StringSet<> CaseValues; // To track unique case values
     for (CaseStmt *Case : Node.getCases()) {
-        llvm::StringRef CaseVal = Case->getCaseValue();
+        llvm::StringRef CaseVal;
+        Final *CaseValueFinal = dynamic_cast<Final *>(Case->getCaseValue()); // TODO here is new changes. old changes are commented.
+        if (CaseValueFinal && CaseValueFinal->getKind() == Final::Ident) {
+            llvm::StringRef CaseVal = CaseValueFinal->getVal();
+        } else {
+        llvm::errs() << "Error: Unsupported case value\n";
+        }
+
         if (CaseValues.find(CaseVal) != CaseValues.end()) {
             llvm::errs() << "Duplicate case value: " << CaseVal << "\n";
             HasError = true;
-        } else {
-            CaseValues.insert(CaseVal); // Add case value to set
-        }
+          } else {
+              CaseValues.insert(CaseVal); // Add unique value to the set
+          }
         Case->accept(*this); // Check case body
     }
 
-    if (Node.hasDefault()) {
-        Node.getDefault()->accept(*this); // Check default body
+    // if (Node.hasDefault()) {
+    //     Node.getDefault()->accept(*this); // Check default body
+    // }
+    if (!Node.getDefaultBody().empty()) { // TODO Check if default body exists. old changes are commented.
+      for (AST *Stmt : Node.getDefaultBody()) {
+          Stmt->accept(*this); // Visit each statement in the default body
+      } 
     }
+
   }
 
   virtual void visit(CaseStmt &Node) override {// TODO: add implementation
@@ -418,19 +431,33 @@ public:
         (*I)->accept(*this); // Check each statement in the body
     }
 
-    Node.getCond()->accept(*this); // Check condition expression
+    Logic *Condition = Node.getCond();
+    if (Condition) {
+        Condition->accept(*this); // Validate the condition
+    } else {
+        llvm::errs() << "Do-While loop must have a valid condition.\n";
+        HasError = true;
+    }
   }
 
   virtual void visit(FunctionCall &Node) override {// TODO: add implementation
-    if (FunctionScope.find(Node.getFunctionName()) == FunctionScope.end()) {
-        llvm::errs() << "Unknown function: " << Node.getFunctionName() << "\n";
+    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+        llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
         HasError = true;
     }
 
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArguments().begin(), E = Node.getArguments().end(); I != E; ++I) {
+    for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
         (*I)->accept(*this); // Check each argument expression
     }
   }
+
+  // TODO: Implement missing virtual methods to make InputCheck concrete
+  virtual void visit(TernaryAssignment &) override {} // TODO
+  virtual void visit(DefaultStmt &) override {} // TODO
+  virtual void visit(Cast &) override {} // TODO
+  virtual void visit(BreakStmt &) override {} // TODO
+  virtual void visit(ContinueStmt &) override {} // TODO
+
 
 };
 }
