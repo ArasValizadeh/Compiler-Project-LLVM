@@ -699,6 +699,25 @@ public:
     }
 };
 
+
+//TODO Cast
+
+class CastExpr : public Expr {
+    llvm::StringRef TargetType; // The target type for the cast (e.g., "int" or "bool")
+    Expr *Operand;             // The expression being cast
+
+public:
+    CastExpr(llvm::StringRef TargetType, Expr *Operand)
+        : TargetType(TargetType), Operand(Operand) {}
+
+    llvm::StringRef getTargetType() const { return TargetType; }
+    Expr *getOperand() const { return Operand; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
+    }
+};
+
 class ForStmt : public Program
 {
 using BodyVector = llvm::SmallVector<AST *>;

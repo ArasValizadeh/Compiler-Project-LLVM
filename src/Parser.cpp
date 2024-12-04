@@ -677,30 +677,41 @@ _error:
     return nullptr;
 }
 
-Expr *Parser::parseFactor()
-{
-    Expr *Left = parseFinal();
-    if (Left == nullptr)
-    {
-        goto _error;
+Expr *Parser::parseFactor() {
+    Expr *Left = nullptr;
+
+    // Handle casting expressions
+    if (Tok.is(Token::ident) && 
+        (Tok.getText() == "int" || Tok.getText() == "float" || Tok.getText() == "bool")) {
+        return parseCastExpr(); // Handle casting
     }
-    while (Tok.is(Token::exp))
-    {
-        BinaryOp::Operator Op;
-        if (Tok.is(Token::exp))
-            Op = BinaryOp::Exp;
-        else {
+
+    switch (Tok.getKind()) {
+        case Token::number: {
+            Left = new Final(Final::Number, Tok.getText());
+            advance();
+            break;
+        }
+        case Token::ident: {
+            Left = new Final(Final::Ident, Tok.getText());
+            advance();
+            break;
+        }
+        case Token::l_paren: {
+            advance();
+            Left = parseExpr();
+            if (!consume(Token::r_paren)) {
+                llvm::errs() << "Expected ')' after expression\n";
+                goto _error;
+            }
+            break;
+        }
+        default: {
             error();
             goto _error;
         }
-        advance();
-        Expr *Right = parseFactor();
-        if (Right == nullptr)
-        {
-            goto _error;
-        }
-        Left = new BinaryOp(Op, Left, Right);
     }
+
     return Left;
 
 _error:
@@ -1077,6 +1088,31 @@ _error:
     while (Tok.getKind() != Token::eoi)
         advance();
     return nullptr;
+}
+
+// TODO cast Parsing
+Expr *Parser::parseCastExpr() {
+    if (!Tok.is(Token::ident)) return nullptr; // Expect a type identifier (e.g., "int")
+    llvm::StringRef TargetType = Tok.getText();
+    advance(); // Consume the type identifier
+
+    if (!consume(Token::l_paren)) {
+        llvm::errs() << "Expected '(' after type in cast\n";
+        return nullptr;
+    }
+
+    Expr *Operand = parseExpr();
+    if (!Operand) {
+        llvm::errs() << "Expected expression inside cast\n";
+        return nullptr;
+    }
+
+    if (!consume(Token::r_paren)) {
+        llvm::errs() << "Expected ')' after cast expression\n";
+        return nullptr;
+    }
+
+    return new CastExpr(TargetType, Operand);
 }
 
 SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
