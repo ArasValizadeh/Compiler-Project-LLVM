@@ -199,7 +199,7 @@ public:
 // DeclarationVar represents a var (dynamically typed) variable declaration
 class DeclarationVar : public Program { // TODO added for var type
     using VarVector = llvm::SmallVector<llvm::StringRef>;
-    using ValueVector = llvm::SmallVector<AST *>;
+    using ValueVector = llvm::SmallVector<Expr *>; // TODO changed from AST* to Expr*
     VarVector Vars;
     ValueVector Values;
 
@@ -218,7 +218,7 @@ public:
 };
 
 public:
-    DeclarationVar(llvm::StringRef Var, AST* Value) 
+    DeclarationVar(llvm::StringRef Var, Expr* Value) 
         : Vars({Var}), Values({Value}) {}
 
     VarVector::const_iterator varBegin() const { return Vars.begin(); }
@@ -233,7 +233,7 @@ public:
 };
 
 // TODO
-// DeclarationConst represents a constant variable declaration
+//DeclarationConst represents a constant variable declaration
 class DeclarationConst : public Program { // TODO added for constant variables
     llvm::StringRef Var;
     Expr *Value;
@@ -241,8 +241,8 @@ class DeclarationConst : public Program { // TODO added for constant variables
 public:
     DeclarationConst(llvm::StringRef Var, Expr *Value) : Var(Var), Value(Value) {}
 
-    llvm::StringRef getVar() { return Var; }
-    Expr *getValue() { return Value; }
+    llvm::StringRef getConstName() { return Var; }
+    Expr *getInitializer() { return Value; }
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for DeclarationConst
@@ -646,7 +646,7 @@ public:
     SwitchStmt(Logic *Cond, llvm::SmallVector<CaseStmt *> Cases, llvm::SmallVector<AST *> DefaultBody)
         : Cond(Cond), Cases(Cases), DefaultBody(DefaultBody) {}
 
-    Logic *getCond() { return Cond; }
+    Logic *getCondition() { return Cond; }
     llvm::SmallVector<CaseStmt *> getCases() { return Cases; }
     llvm::SmallVector<AST *> getDefaultBody() { return DefaultBody; }
 

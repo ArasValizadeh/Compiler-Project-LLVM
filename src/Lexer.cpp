@@ -332,6 +332,8 @@ void Lexer::formToken(Token &Tok, const char *TokEnd,
 {
     Tok.Kind = Kind;
     Tok.Text = llvm::StringRef(BufferPtr, TokEnd - BufferPtr);
-    llvm::errs() << "Token formed: Kind=" << Kind << ", Text=" << Tok.Text << "\n"; // Debug log
+    llvm::errs() <<"------------------------------------------------------------------\n";
+    llvm::errs() << "Token formed: Kind: " << Kind << ", Text: " << Tok.Text << "\n"; // Debug log
+    llvm::errs() <<"------------------------------------------------------------------\n";
     BufferPtr = TokEnd;
 }

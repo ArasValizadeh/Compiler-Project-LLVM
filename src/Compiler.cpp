@@ -32,21 +32,21 @@ int main(int argc, const char **argv){
     Parser Parser(Lex);
 
     //TODO: should be uncommented
-    // // Parse the input expression to generate an Abstract Syntax Tree (AST)
-    // Program *Tree = Parser.parse();
+    // Parse the input expression to generate an Abstract Syntax Tree (AST)
+    Program *Tree = Parser.parse();
 
-    // // Check if parsing was successful or if syntax errors occurred
-    // if (!Tree || Parser.hasError()){
-    //     llvm::errs() << "Syntax errors occurred\n"; // Report syntax errors to the user
-    //     return 1; // Exit with an error code
-    // }
+    // Check if parsing was successful or if syntax errors occurred
+    if (!Tree || Parser.hasError()){
+        llvm::errs() << "Syntax errors occurred\n"; // Report syntax errors to the user
+        return 1; // Exit with an error code
+    }
 
-    // // Create a Semantic Analyzer object to perform semantic checks on the AST
-    // Sema Semantic;
-    // if (Semantic.semantic(Tree)){
-    //     llvm::errs() << "Semantic errors occurred\n"; // Report semantic errors
-    //     return 1; // Exit with an error code
-    // }
+    // Create a Semantic Analyzer object to perform semantic checks on the AST
+    Sema Semantic;
+    if (Semantic.semantic(Tree)){
+        llvm::errs() << "Semantic errors occurred\n"; // Report semantic errors
+        return 1; // Exit with an error code
+    }
 
     // // Create a Code Generator object to translate the AST into LLVM IR
     // CodeGen CodeGenerator;
