@@ -202,11 +202,13 @@ DeclarationInt *Parser::parseIntDec(){
     llvm::SmallVector<Expr *> Values;
     
     if (expect(Token::KW_int)){
+        llvm::errs() << "in parse int decleration\n";
         goto _error;
     }
     advance();
     
     if (expect(Token::ident)){
+        llvm::errs() << "in parse int decleration\n";
         goto _error;
     }
 
@@ -221,6 +223,7 @@ DeclarationInt *Parser::parseIntDec(){
             Values.push_back(E);
         }
         else{
+            llvm::errs() << "in parse int decleration\n";
             goto _error;
         }
     }
@@ -234,6 +237,7 @@ DeclarationInt *Parser::parseIntDec(){
     {
         advance();
         if (expect(Token::ident)){
+            llvm::errs() << "in parse int decleration\n";
             goto _error;
         }
             
@@ -247,6 +251,7 @@ DeclarationInt *Parser::parseIntDec(){
                 Values.push_back(E);
             }
             else{
+                llvm::errs() << "in parse int decleration\n";
                 goto _error;
             }
         }
@@ -256,6 +261,7 @@ DeclarationInt *Parser::parseIntDec(){
     }
 
     if (expect(Token::semicolon)){
+        llvm::errs() << "in parse int decleration\n";
         goto _error;
     }
 
@@ -436,14 +442,23 @@ DefineStmt *Parser::parseDefine() { // TODO added for #define macros
     llvm::StringRef MacroName;
     llvm::StringRef MacroValue;
 
-    if (expect(Token::KW_define)) goto _error;
+    if (expect(Token::KW_define)){
+        llvm::errs() << "in parse define1\n";
+        goto _error;
+    }
     advance();
 
-    if (expect(Token::ident)) goto _error;
+    if (expect(Token::ident)){
+        llvm::errs() << "in parse define2\n";
+        goto _error;
+    }
     MacroName = Tok.getText();
     advance();
 
-    if (!Tok.is(Token::number) && !Tok.is(Token::ident)) goto _error;
+    if (!Tok.is(Token::number) && !Tok.is(Token::ident) && !Tok.is(Token::floatNumber) && !Tok.is(Token::KW_bool)){
+        llvm::errs() << "in parse define3\n";
+        goto _error;
+    }
     MacroValue = Tok.getText();
     advance();
 
@@ -536,6 +551,7 @@ Assignment *Parser::parseIntAssign()
         return new Assignment(F, E, AK, nullptr);
     }
     else{
+        llvm::errs() << "here i give error\n";
         goto _error;
     }
 
