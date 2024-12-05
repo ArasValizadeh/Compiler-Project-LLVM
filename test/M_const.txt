@@ -1,0 +1,6 @@
+const int x = 10;
+const float a = 20.2;
+const int y = 20;
+const float b = 10.2;
+const int z = x * y;
+const float c = a * b;

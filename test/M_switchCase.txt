@@ -1,0 +1,13 @@
+float x = 10.5;
+float y = x * 20.5;
+switch(y){
+	case 200:
+		y = y + 2.3;
+		break;
+	case 300:
+		x = x * 21.2;
+		break;
+	default:
+		x = x * y;
+		break;
+}

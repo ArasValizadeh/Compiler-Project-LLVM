@@ -1,0 +1,4 @@
+float x = 12.3;
+float y = 10.5;
+bool q = false;
+float check = q ? x : y;

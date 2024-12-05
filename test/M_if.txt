@@ -1,0 +1,17 @@
+int x = 10;
+float y = 23.5;
+bool q = false;
+
+if(x > y && q){
+	q = true;
+}
+else if (y == x && q){
+	q = true;
+}
+else if (true && q){
+	q = true;
+}
+else {
+	x = 12;
+}
+

@@ -1,0 +1,6 @@
+var a = false;
+var b = true;
+var c = 12;
+var d = 12.4;
+var e = 14;
+var f = c * e;
