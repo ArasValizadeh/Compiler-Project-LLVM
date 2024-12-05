@@ -1,0 +1,24 @@
+int a, s,d,f,g;
+switch(a){
+    case 1:
+        a += 2;
+        b = b * b * b;
+    case 2:
+        a = 12;
+        print(a);
+        beark;
+    default:
+        d = d * 2;
+}
+switch(b){
+    default:
+        print(b);
+    case 1:
+        a += 2;
+        b = b * b * b;
+        beark;
+    case 2:
+        a = 12;
+        print(a);
+        beark;
+}

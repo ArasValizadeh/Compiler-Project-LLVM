@@ -52,8 +52,14 @@ public:
   virtual void visit(Final &Node) override {
     if (Node.getKind() == Final::Ident) {
       // Check if identifier is in the scope
-      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end())
+      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end()){
+        llvm::errs() << "node value is: " << Node.getVal() << " and it is of kind: " << Node.getKind() <<"\n";
+
+        // for (const auto &entry : IntScope) {
+        //   llvm::errs() << "IntScope contains: " << entry << "it's value is: " << entry.getVal() << "and it is of kind: " << entry.getKind() << "\n";
+        // }
         error(Not, Node.getVal());
+      }
     }
   };
 

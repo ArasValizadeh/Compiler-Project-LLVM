@@ -557,6 +557,7 @@ public:
         V.visit(*this);
     }
 };
+
 class WhileStmt : public Program
 {
 using BodyVector = llvm::SmallVector<AST *>;
@@ -644,7 +645,6 @@ public:
         V.visit(*this); // Visit the default statement
     }
 };
-
 
 // TODO
 // SwitchStmt represents a switch-case construct in the AST

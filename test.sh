@@ -25,7 +25,6 @@ if [[ -n "$SPECIFIC_FILE" ]]; then
         echo "🚀 Compiling $filename..."
         output=$(./compiler "$(cat "$file")" 2>&1)
         exit_code=$?
-
        echo "$output"
 
         if [[ $exit_code -eq 0 ]]; then
@@ -39,7 +38,8 @@ if [[ -n "$SPECIFIC_FILE" ]]; then
         echo "❌ File '$SPECIFIC_FILE' not found in the ../../test directory."
     fi
 else
-    for file in ../../test/*.txt; do
+    for file in ../../test/*; do
+      
         if [[ -f "$file" ]]; then
             filename=$(basename "$file")
             echo "🚀 Compiling $filename..."

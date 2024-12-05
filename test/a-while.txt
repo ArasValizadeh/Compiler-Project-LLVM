@@ -1,0 +1,6 @@
+int a,s,d,f;
+do{
+    a/=2;
+    print(a+3);
+}while (s in [1,2,3,4,5] xor d not in [1,2,3,4,5])
+print(a);

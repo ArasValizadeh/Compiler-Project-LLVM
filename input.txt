@@ -1,3 +1,9 @@
-#define PI 3.14
-int r = 2;
-int area = PI * r * r;
+int x = 10;
+int y = 20;
+if (x > y) {
+	print(x);
+} else if (x == y) {
+	print(x);
+} else {
+	print(x);
+}
