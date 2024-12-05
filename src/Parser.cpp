@@ -174,6 +174,7 @@ Program *Parser::parseProgram()
         advance();
         
     }
+    
     return new Program(data);
 _error:
     while (Tok.getKind() != Token::eoi)
@@ -251,7 +252,6 @@ _error:
         advance();
     return nullptr;
 }
-
 
 DeclarationBool *Parser::parseBoolDec()
 {
@@ -562,6 +562,7 @@ _error:
         advance();
     return nullptr;
 }
+
 Expr *Parser::parseExpr()
 {
     Expr *Left = parseTerm();
@@ -1017,6 +1018,7 @@ SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
     llvm::SmallVector<CaseStmt *> Cases;
     DefaultStmt *Default = nullptr; // Declare Default as a pointer to DefaultStmt
     llvm::SmallVector<AST *> DefaultBody;
+
     if (expect(Token::KW_switch)){
         llvm::errs() << "i'm here in switch\n";
         goto _error;
@@ -1055,6 +1057,7 @@ SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
             llvm::errs() << "the value of case\n";
             goto _error;
         }
+
         if (expect(Token::colon)){
             llvm::errs() << "here i should see a :\n";
             goto _error;
@@ -1074,16 +1077,16 @@ SwitchStmt *Parser::parseSwitch() {// TODO added for switch-case construct
         advance();
         llvm::SmallVector<AST *> DefaultBody = getBody();
         Default = new DefaultStmt(DefaultBody); // Wrap the body in DefaultStmt 
-    } else {
-        Default = nullptr; // No default case
-    }
-
-    if (expect(Token::r_brace)){
-        llvm::errs() << "for }\n";
-        goto _error;
-    }
-    
-    return new SwitchStmt(Cond, Cases, Default);
+        } else {
+            Default = nullptr; // No default case
+        }
+        if (!consume(Token::r_brace)) {
+            llvm::errs() << "Expected '}' at the end of switch statement\n";
+            goto _error;
+        }
+        llvm::errs() << "alan daghighan posht in returnam\n";
+        advance();
+        return new SwitchStmt(Cond, Cases, Default);
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();
@@ -1147,7 +1150,6 @@ _error:
     while (Tok.getKind() != Token::eoi) advance();
     return nullptr;
 }
-
 // TODO min, max, mean, sqrtN
 Expr *Parser::parseFunctionCall() {
     llvm::SmallVector<Expr *> Args;
@@ -1422,7 +1424,6 @@ _error:
 }
 
 
-
 llvm::SmallVector<AST *> Parser::getBody()
 {
     llvm::SmallVector<AST *> body;
@@ -1555,8 +1556,6 @@ llvm::SmallVector<AST *> Parser::getBody()
             break;
         }
         default:{
-            error();
-
             goto _error;
             break;
         }

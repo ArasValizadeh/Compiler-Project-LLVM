@@ -74,6 +74,8 @@ class Parser
     ContinueStmt *parseContinue(); // TODO Parses 'continue' statements
     PrintStmt *parsePrint();
     void parseComment();
+    void logRemainingTokens() const;
+
     llvm::SmallVector<AST *> getBody();
 
 public:

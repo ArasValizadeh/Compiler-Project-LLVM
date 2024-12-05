@@ -104,7 +104,7 @@ public:
   };
 
   // Visit function for Assignment nodes
-  virtual void visit(Assignment &Node) override {
+ virtual void visit(Assignment &Node) override {
     Final *dest = Node.getLeft();
     Expr *RightExpr;
     Logic *RightLogic;
@@ -394,7 +394,7 @@ public:
     for (CaseStmt *Case : Node.getCases()) {
         llvm::StringRef CaseVal;
         Final *CaseValueFinal = dynamic_cast<Final *>(Case->getCaseValue()); // TODO here is new changes. old changes are commented.
-        if (CaseValueFinal && CaseValueFinal->getKind() == Final::Ident) {
+        if (CaseValueFinal && (CaseValueFinal->getKind() == Final::Ident || CaseValueFinal->getKind() == Final::Number || CaseValueFinal->getKind() == Final::Bool || CaseValueFinal->getKind() == Final:: FloatNumber)) {
             llvm::StringRef CaseVal = CaseValueFinal->getVal();
         } else {
         llvm::errs() << "Error: Unsupported case value\n";
