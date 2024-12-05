@@ -197,11 +197,14 @@ public:
 
 //TODO
 // DeclarationVar represents a var (dynamically typed) variable declaration
+<<<<<<< HEAD
+=======
 class DeclarationVar : public Program { // TODO added for var type
     using VarVector = llvm::SmallVector<llvm::StringRef>;
     using ValueVector = llvm::SmallVector<Expr *>; // TODO changed from AST* to Expr*
     VarVector Vars;
     ValueVector Values;
+>>>>>>> f27207f34b8d984e8565ccf55a568c034c010c9f
 
 // TODO
 class DefaultStmt : public AST {
@@ -217,6 +220,11 @@ public:
     }
 };
 
+class DeclarationVar : public Program { // TODO added for var type
+    using VarVector = llvm::SmallVector<llvm::StringRef>;
+    using ValueVector = llvm::SmallVector<AST *>;
+    VarVector Vars;
+    ValueVector Values;
 public:
     DeclarationVar(llvm::StringRef Var, Expr* Value) 
         : Vars({Var}), Values({Value}) {}
@@ -702,6 +710,25 @@ public:
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for FunctionCall
+    }
+};
+
+
+//TODO Cast
+
+class CastExpr : public Expr {
+    llvm::StringRef TargetType; // The target type for the cast (e.g., "int" or "bool")
+    Expr *Operand;             // The expression being cast
+
+public:
+    CastExpr(llvm::StringRef TargetType, Expr *Operand)
+        : TargetType(TargetType), Operand(Operand) {}
+
+    llvm::StringRef getTargetType() const { return TargetType; }
+    Expr *getOperand() const { return Operand; }
+
+    virtual void accept(ASTVisitor &V) override {
+        V.visit(*this);
     }
 };
 
