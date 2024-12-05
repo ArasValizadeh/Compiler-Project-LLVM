@@ -1,0 +1,13 @@
+int a, b, c, d, e;
+a = 12;
+if (a in [12,11,10,9,8,7,6,5]){
+    if (a > 1.12){
+        print(1);
+    }else{
+        print(2);
+    }
+}else if (a not in [12,12,2,2,23,3]){
+    print(a);
+}else{
+    a = 0;
+}
