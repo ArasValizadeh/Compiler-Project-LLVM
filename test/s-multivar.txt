@@ -1,3 +1,2 @@
 int a,b,c = 1,2,3 ;
 bool x,y,z = true, false , true ;
-var i , j , k = 10.01 , true ;
