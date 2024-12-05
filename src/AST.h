@@ -197,28 +197,19 @@ public:
 
 //TODO
 // DeclarationVar represents a var (dynamically typed) variable declaration
-<<<<<<< HEAD
-=======
-class DeclarationVar : public Program { // TODO added for var type
-    using VarVector = llvm::SmallVector<llvm::StringRef>;
-    using ValueVector = llvm::SmallVector<Expr *>; // TODO changed from AST* to Expr*
-    VarVector Vars;
-    ValueVector Values;
->>>>>>> f27207f34b8d984e8565ccf55a568c034c010c9f
 
 // TODO
-class DefaultStmt : public AST {
-    llvm::SmallVector<AST *> Body;
+// class DefaultStmt : public AST {
+//     llvm::SmallVector<AST *> Body;
 
-public:
-    DefaultStmt(llvm::SmallVector<AST *> Body) : Body(Body) {}
-
-    llvm::SmallVector<AST *> getBody() { return Body; }
-
-    virtual void accept(ASTVisitor &V) override {
-        V.visit(*this);
-    }
-};
+//TODO
+// public:
+//     DefaultStmt(llvm::SmallVector<AST *> Body) : Body(Body) {}
+//     llvm::SmallVector<AST *> getBody() { return Body; }
+//     virtual void accept(ASTVisitor &V) override {
+//         V.visit(*this);
+//     }
+// };
 
 class DeclarationVar : public Program { // TODO added for var type
     using VarVector = llvm::SmallVector<llvm::StringRef>;
@@ -607,18 +598,16 @@ public:
     }
 };
 
+//TODO
 // class DeclareDefine : public Program
 // {
 // private:
 //     llvm::StringRef Name;   // Name of the constant
 //     Expr *Value;            // Value of the constant
-
 // public:
 //     DeclareDefine(llvm::StringRef Name, Expr *Value) : Name(Name), Value(Value) {}
-
 //     llvm::StringRef getName() { return Name; }
 //     Expr *getValue() { return Value; }
-
 //     virtual void accept(ASTVisitor &V) override
 //     {
 //         V.visit(*this);

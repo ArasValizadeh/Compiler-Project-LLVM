@@ -44,8 +44,8 @@ class Parser
         return false;
     }
 
-    BreakStmt *parseBreak();       // TODO Declaration for parsing break statements
-    ContinueStmt *parseContinue(); // TODO Declaration for parsing continue statements
+    // BreakStmt *parseBreak();       // TODO Declaration for parsing break statements
+    // ContinueStmt *parseContinue(); // TODO Declaration for parsing continue statements
     Expr *parseTernary();  // TODO
     Program *parseProgram();
     DeclarationInt *parseIntDec();
@@ -76,6 +76,8 @@ class Parser
     BreakStmt *parseBreak();       // TODO Parses 'break' statements
     ContinueStmt *parseContinue(); // TODO Parses 'continue' statements
     PrintStmt *parsePrint();
+    Expr *parseCastExpr();  // TODO Handles casting expressions
+
     void parseComment();
     void logRemainingTokens() const;
 

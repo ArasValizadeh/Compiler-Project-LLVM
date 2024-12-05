@@ -353,7 +353,7 @@ public:
   }
 
   virtual void visit(DeclarationVar &Node) override {// TODO: add implementation
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
+    for (llvm::SmallVector<AST *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
         (*I)->accept(*this); // Check initializer expressions
     }
 

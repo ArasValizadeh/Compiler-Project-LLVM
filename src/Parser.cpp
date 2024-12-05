@@ -545,7 +545,6 @@ _error:
         return nullptr;
 }
 
-
 UnaryOp *Parser::parseUnary()
 {
     UnaryOp* Res = nullptr;
@@ -615,29 +614,6 @@ Expr *Parser::parseExpr()
 _error:
     while (Tok.getKind() != Token::eoi)
         advance();
-    return nullptr;
-}
-
-// TODO: Added for break statements
-BreakStmt *Parser::parseBreak() { 
-    if (expect(Token::KW_break)) goto _error;
-    advance();
-    if (expect(Token::semicolon)) goto _error;
-    return new BreakStmt();
-
-_error:
-    while (Tok.getKind() != Token::eoi) advance();
-    return nullptr;
-}
-
-ContinueStmt *Parser::parseContinue() { // TODO: Added for continue statements
-    if (expect(Token::KW_continue)) goto _error;
-    advance();
-    if (expect(Token::semicolon)) goto _error;
-    return new ContinueStmt();
-
-_error:
-    while (Tok.getKind() != Token::eoi) advance();
     return nullptr;
 }
 
@@ -1510,7 +1486,6 @@ _error:
     return nullptr;
 }
 
-
 void Parser::parseComment()
 {
     if (expect(Token::start_comment)) {
@@ -1632,24 +1607,6 @@ llvm::SmallVector<AST *> Parser::getBody()
             break;
         }
         case Token::KW_continue: { // TODO: Added for continue
-            ContinueStmt *c = parseContinue();
-            if (c) {
-                body.push_back(c);
-            } else {
-                goto _error;
-            }
-            break;
-        }
-        case Token::KW_break: { // Added for `break`
-            BreakStmt *b = parseBreak();
-            if (b) {
-                body.push_back(b);
-            } else {
-                goto _error;
-            }
-            break;
-        }
-        case Token::KW_continue: { // Added for `continue`
             ContinueStmt *c = parseContinue();
             if (c) {
                 body.push_back(c);
