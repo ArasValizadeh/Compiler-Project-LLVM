@@ -1,0 +1,3 @@
+#define PI 3.14
+int r = 2;
+int area = PI * r * r;
