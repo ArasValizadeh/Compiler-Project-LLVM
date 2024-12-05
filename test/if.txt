@@ -1,9 +1,9 @@
 int x = 10;
 int y = 20;
 if (x > y) {
-    return 1;
+    print(x);
 } else if (x == y) {
-    return 2;
+    print(x);
 } else {
-    return 3;
+    print(x);
 }

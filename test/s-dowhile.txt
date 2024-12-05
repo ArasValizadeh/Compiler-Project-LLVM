@@ -1,0 +1,7 @@
+do {
+    print(x);
+} while (x < 10);
+
+do {
+    print(x);
+} while (1 == 1);

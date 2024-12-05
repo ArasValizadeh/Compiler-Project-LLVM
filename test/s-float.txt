@@ -1,0 +1,6 @@
+float x = 10.5;
+float y = 20.5;
+float sum = x + y;
+print(x);
+print(y);
+print(sum);

@@ -1,0 +1,3 @@
+int x = 10;
+int y = (int)x;
+print(y);
