@@ -399,21 +399,6 @@ public:
   virtual void visit(SignedNumber &Node) override {
   };
 
-//   virtual void visit(DeclarationVar &Node) override {// TODO: add implementation
-//     for (llvm::SmallVector<AST *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
-//         (*I)->accept(*this); // Check initializer expressions
-//     }
-
-//     for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E; ++I) {
-//         if (IntScope.find(*I) != IntScope.end() || BoolScope.find(*I) != BoolScope.end() || FloatScope.find(*I) != FloatScope.end()) {
-//             llvm::errs() << "Variable " << *I << " is already declared as a specific type." << "\n";
-//             HasError = true;
-//         } else {
-//             VarScope.insert(*I); // Add variable to dynamically typed scope
-//         }
-//     }
-// }
-
   virtual void visit(DeclarationVar &Node) override {
     // Iterate over the values (initializers)
     for (DeclarationVar::ValueVector::const_iterator I = Node.valBegin(), 
@@ -518,15 +503,6 @@ public:
     LoopDepth--;
   }
 
-  // virtual void visit(FunctionCall &Node) override {// TODO: add implementation
-  //   if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
-  //       llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
-  //       HasError = true;
-  //   }
-  //   for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
-  //       (*I)->accept(*this); // Check each argument expression
-  //   }
-  // }
 
   // TODO: Implement missing virtual methods to make InputCheck concrete
   virtual void visit(TernaryAssignment &Node) override {

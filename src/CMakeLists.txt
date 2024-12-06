@@ -1,6 +1,6 @@
 add_executable (compiler
   Compiler.cpp
-  # CodeGen.cpp
+  CodeGen.cpp
   Lexer.cpp
   Parser.cpp
   Sema.cpp

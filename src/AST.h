@@ -246,10 +246,15 @@ public:
     VarVector::const_iterator varEnd() const { return Vars.end(); }
     ValueVector::const_iterator valBegin() const { return Values.begin(); }
     ValueVector::const_iterator valEnd() const { return Values.end(); }
+    llvm::StringRef getVar() const { return VarName; }
+    Expr* getInitializer() const { return Initializer; }
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
+private:
+  Expr *Initializer; // Ensure Initializer is declared.
+  llvm::StringRef VarName; // Ensure VarName is declared.
 };
 
 // TODO
@@ -689,6 +694,7 @@ public:
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for SwitchStmt
     }
+    bool hasDefault() const { return Default != nullptr; } 
 };
 
 // TODO
@@ -725,6 +731,7 @@ public:
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for FunctionCall
     }
+
 };
 
 

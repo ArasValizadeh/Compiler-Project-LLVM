@@ -173,6 +173,7 @@ namespace ns
         itVal++;
       }
     };
+    
     virtual void visit(Assignment &Node) override
     {
       // Get the name of the variable being assigned.
@@ -571,8 +572,7 @@ namespace ns
       }
     };
 
-    void visit(DeclarationFloat &Node)
-    {
+    void visit(DeclarationFloat &Node) override{ // TODO
       llvm::SmallVector<Value *, 8> vals;
 
       // Visit each initializer expression to generate their IR
@@ -605,8 +605,7 @@ namespace ns
       }
     }
 
-    void visit(DeclarationVar &Node)
-    {                                       // TODO: Implement declaration var logic
+    void visit(DeclarationVar &Node) override{  // TODO: Implement declaration var logic
       Node.getInitializer()->accept(*this); // Visit initializer expression
       Value *initializer = V;
 
@@ -617,8 +616,7 @@ namespace ns
       Builder.CreateStore(initializer, allocaInst); // Store the initializer
     }
 
-    void visit(DeclarationConst &Node)
-    {                                       // TODO: Implement declaration const logic
+    void visit(DeclarationConst &Node) override{ // TODO: Implement declaration const logic
       Node.getInitializer()->accept(*this); // Visit initializer expression
       Value *initializer = V;
 
@@ -629,15 +627,13 @@ namespace ns
           Node.getConstName().str());
     }
 
-    void visit(DefineStmt &Node)
-    { // TODO: Implement #define logic
-      Constant *constValue = ConstantDataArray::getString(M->getContext(), Node.getValue().str());
+    void visit(DefineStmt &Node) override{ // TODO: Implement #define logic
+      Constant *constValue = ConstantDataArray::getString(M->getContext(), Node.getMacroValue().str());
       new GlobalVariable(
-          *M, constValue->getType(), true, GlobalValue::ExternalLinkage, constValue, Node.getDefineName().str());
+          *M, constValue->getType(), true, GlobalValue::ExternalLinkage, constValue, Node.getMacroName().str());
     }
 
-    void visit(SwitchStmt &Node)
-    { // TODO: Implement switch statement logic
+    void visit(SwitchStmt &Node) override{ // TODO: Implement switch statement logic
       BasicBlock *AfterSwitchBB = BasicBlock::Create(M->getContext(), "after.switch", Builder.GetInsertBlock()->getParent());
       BasicBlock *DefaultBB = nullptr;
 
@@ -671,8 +667,7 @@ namespace ns
       Builder.SetInsertPoint(AfterSwitchBB);
     }
 
-    void visit(CaseStmt &Node)
-    { // TODO: Implement case statement logic
+    void visit(CaseStmt &Node) override{ // TODO: Implement case statement logic
       BasicBlock *CaseBB = Builder.GetInsertBlock();
       for (AST* stmt : Node.getBody()) {//TODO:changed from gpt to curser
         stmt->accept(*this);
@@ -681,8 +676,7 @@ namespace ns
       Builder.CreateBr(CaseBB); // Branch to the next block
     }
 
-    void visit(DoWhileStmt &Node)
-    { // TODO: Implement do-while loop logic
+    void visit(DoWhileStmt &Node) override{ // TODO: Implement do-while loop logic
       BasicBlock *LoopBB = BasicBlock::Create(M->getContext(), "do.body", Builder.GetInsertBlock()->getParent());
       BasicBlock *CondBB = BasicBlock::Create(M->getContext(), "do.cond", Builder.GetInsertBlock()->getParent());
       BasicBlock *AfterDoBB = BasicBlock::Create(M->getContext(), "after.do", Builder.GetInsertBlock()->getParent());
@@ -690,7 +684,10 @@ namespace ns
       Builder.CreateBr(LoopBB);
 
       Builder.SetInsertPoint(LoopBB);
-      Node.getBody()->accept(*this);
+      for (AST *stmt : Node.getBody()) {
+        stmt->accept(*this);
+      }
+
       Builder.CreateBr(CondBB);
 
       Builder.SetInsertPoint(CondBB);
@@ -701,9 +698,9 @@ namespace ns
       Builder.SetInsertPoint(AfterDoBB);
     }
 
-    void visit(FunctionCall &Node) {// TODO: Implement function call logic
+    void visit(FunctionCall &Node) override{// TODO: Implement function call logic
       std::vector<Value *> Args;
-      for (Expr *Arg : Node.getArguments()) {
+      for (Expr *Arg : Node.getArgs()) {
           Arg->accept(*this);
           Args.push_back(V);
       }
@@ -715,6 +712,36 @@ namespace ns
       }
 
       V = Builder.CreateCall(Callee, Args);
+    }
+  
+    void visit(TernaryAssignment &Node) { // TODO
+      // Handle ternary assignment code generation
+      llvm::errs() << "Generating IR for Ternary Assignment\n";
+      Node.getCondition()->accept(*this);
+      Node.getTrueExpr()->accept(*this);
+      Node.getFalseExpr()->accept(*this);
+    }
+
+    void visit(DefaultStmt &Node) { // TODO
+      llvm::errs() << "Generating IR for Default Statement\n";
+      for (AST *Stmt : Node.getBody()) {
+      Stmt->accept(*this);
+      }
+    }
+
+    void visit(Cast &Node) { // TODO
+      llvm::errs() << "Generating IR for Cast\n";
+      //Node.getExpr()->accept(*this);
+    }
+
+    void visit(BreakStmt &Node) { // TODO
+      llvm::errs() << "Generating IR for Break Statement\n";
+      // Add break-specific IR generation code here
+    }
+
+    void visit(ContinueStmt &Node) { // TODO
+      llvm::errs() << "Generating IR for Continue Statement\n";
+      // Add continue-specific IR generation code here
     }
   };
 }; // namespace
