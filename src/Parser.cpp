@@ -198,191 +198,217 @@ _error:
     return nullptr;
 }
 
-DeclarationInt *Parser::parseIntDec(){
+
+
+DeclarationInt *Parser::parseIntDec() {
     Expr *E = nullptr;
     llvm::SmallVector<llvm::StringRef> Vars;
     llvm::SmallVector<Expr *> Values;
-    
-    if (expect(Token::KW_int)){
-        llvm::errs() << "in parse int decleration keyword\n";
+
+    if (expect(Token::KW_int)) {
+        llvm::errs() << "in parse int declaration keyword\n";
         goto _error;
     }
     advance();
-    
-    if (expect(Token::ident)){
-        llvm::errs() << "in parse int decleration identifier\n";
-        goto _error;
-    }
 
-    Vars.push_back(Tok.getText());
-    advance();
-
-    if (Tok.is(Token::assign))
-    {
-        advance();
-        E = parseExpr();
-        if(E){
-            Values.push_back(E);
-        }
-        else{
-            llvm::errs() << "in parse int decleration assign\n";
+    while (true) {
+        if (expect(Token::ident)) {
+            llvm::errs() << "in parse int declaration identifier\n";
             goto _error;
         }
-    }
-    else
-    {
-        Values.push_back(new Final(Final::Number, llvm::StringRef("0")));
-    }
-    
-    
-    while (Tok.is(Token::comma))
-    {
-        advance();
-        if (expect(Token::ident)){
-            llvm::errs() << "in parse int decleration after comma\n";
-            goto _error;
-        }
-            
+
         Vars.push_back(Tok.getText());
         advance();
 
-        if(Tok.is(Token::assign)){
-            advance();
-            E = parseExpr();
-            if(E){
-                Values.push_back(E);
-            }
-            else{
-                llvm::errs() << "in parse int decleration after comma and assign\n";
-                goto _error;
-            }
+        // If no more variables or assignments, stop processing
+        if (!Tok.is(Token::comma) && !Tok.is(Token::assign)) {
+            break;
         }
-        else{
-            Values.push_back(new Final(Final::Number, llvm::StringRef("0")));
+
+        // Handle multiple variables with explicit assignments
+        if (Tok.is(Token::comma)) {
+            advance(); // Move to next identifier
+        } else if (Tok.is(Token::assign)) {
+            advance(); // Move past `=`
+
+            // Parse the list of explicit values
+            while (true) {
+                E = parseExpr();
+                if (!E) {
+                    llvm::errs() << "in parse int declaration after assign\n";
+                    goto _error;
+                }
+                Values.push_back(E);
+
+                // If there's a `,`, continue parsing more values
+                if (Tok.is(Token::comma)) {
+                    advance();
+                } else {
+                    break; // Stop when no more values
+                }
+            }
+            break; // Stop variable parsing after explicit values
         }
     }
 
-    if (expect(Token::semicolon)){
-        llvm::errs() << "in parse int decleration after semicolon\n";
+    if (expect(Token::semicolon)) {
+        llvm::errs() << "in parse int declaration after semicolon\n";
         goto _error;
     }
 
+    // Assign default values for any variables without explicit values
+    while (Values.size() < Vars.size()) {
+        Values.push_back(new Final(Final::Number, llvm::StringRef("0")));
+    }
+
+    // Ensure the number of values matches the variables
+    if (Values.size() != Vars.size()) {
+        llvm::errs() << "Number of variables and values do not match\n";
+        goto _error;
+    }
 
     return new DeclarationInt(Vars, Values);
-_error: 
+
+_error:
     while (Tok.getKind() != Token::eoi)
         advance();
     return nullptr;
 }
 
-DeclarationBool *Parser::parseBoolDec()
-{
+DeclarationBool *Parser::parseBoolDec() {
     Logic *L = nullptr;
     llvm::SmallVector<llvm::StringRef> Vars;
     llvm::SmallVector<Logic *> Values;
-    
-    if (expect(Token::KW_bool)){
+
+    if (expect(Token::KW_bool)) {
         goto _error;
     }
     advance();
-    
-    if (expect(Token::ident)){
-        goto _error;
-    }
 
-    Vars.push_back(Tok.getText());
-    advance();
-
-    if (Tok.is(Token::assign))
-    {
-        advance();
-        L = parseLogic();
-        if(L){
-            Values.push_back(L);
-        }
-        else{
+    while (true) {
+        if (expect(Token::ident)) {
             goto _error;
         }
-    }
-    else
-    {
-        Values.push_back(new Comparison(nullptr, nullptr, Comparison::False));
-    }
-    
-    
-    while (Tok.is(Token::comma))
-    {
-        advance();
-        if (expect(Token::ident)){
-            goto _error;
-        }
-            
+
         Vars.push_back(Tok.getText());
         advance();
 
-        if(Tok.is(Token::assign)){
-            advance();
-            L = parseLogic();
-            if(L){
-                Values.push_back(L);
-            }
-            else{
-                goto _error;
-            }
+        // Stop processing if there are no more variables or assignments
+        if (!Tok.is(Token::comma) && !Tok.is(Token::assign)) {
+            break;
         }
-        else{
-            Values.push_back(new Comparison(nullptr, nullptr, Comparison::False));
+
+        // Handle explicit assignments
+        if (Tok.is(Token::comma)) {
+            advance(); // Move to next variable
+        } else if (Tok.is(Token::assign)) {
+            advance(); // Move past `=`
+
+            // Parse the list of explicit values
+            while (true) {
+                L = parseLogic();
+                if (!L) {
+                    goto _error;
+                }
+                Values.push_back(L);
+
+                // Continue parsing more values if a comma is found
+                if (Tok.is(Token::comma)) {
+                    advance();
+                } else {
+                    break; // Stop when no more values
+                }
+            }
+            break; // Stop variable parsing after explicit values
         }
     }
 
-    if (expect(Token::semicolon)){
+    if (expect(Token::semicolon)) {
         goto _error;
     }
+
+    // Assign default values for variables without explicit values
+    while (Values.size() < Vars.size()) {
+        Values.push_back(new Comparison(nullptr, nullptr, Comparison::False));
+    }
+
+    // Ensure the number of values matches the number of variables
+    if (Values.size() != Vars.size()) {
+        llvm::errs() << "Number of variables and values do not match\n";
+        goto _error;
+    }
+
     return new DeclarationBool(Vars, Values);
-_error: 
+
+_error:
     while (Tok.getKind() != Token::eoi)
         advance();
     return nullptr;
 }
 
-DeclarationFloat *Parser::parseFloatDec() {// TODO added for float type
+DeclarationFloat *Parser::parseFloatDec() { // Updated for multiple float variables
     Expr *E = nullptr;
     llvm::SmallVector<llvm::StringRef> Vars;
     llvm::SmallVector<Expr *> Values;
 
-    if (expect(Token::KW_float)) goto _error;
-    advance();
-
-    if (expect(Token::ident)) goto _error;
-    Vars.push_back(Tok.getText());
-    advance();
-
-    if (Tok.is(Token::assign)) {
-        advance();
-        E = parseExpr();
-        if (E) Values.push_back(E);
-        else goto _error;
-    } else {
-        Values.push_back(new Final(Final::Number, llvm::StringRef("0.0")));
+    if (expect(Token::KW_float)) {
+        goto _error;
     }
+    advance();
 
-    while (Tok.is(Token::comma)) {
-        advance();
-        if (expect(Token::ident)) goto _error;
+    while (true) {
+        if (expect(Token::ident)) {
+            goto _error;
+        }
+
         Vars.push_back(Tok.getText());
         advance();
 
-        if (Tok.is(Token::assign)) {
-            advance();
-            E = parseExpr();
-            if (E) Values.push_back(E);
-            else goto _error;
-        } else {
-            Values.push_back(new Final(Final::Number, llvm::StringRef("0.0")));
+        // Stop processing if there are no more variables or assignments
+        if (!Tok.is(Token::comma) && !Tok.is(Token::assign)) {
+            break;
+        }
+
+        // Handle explicit assignments
+        if (Tok.is(Token::comma)) {
+            advance(); // Move to next variable
+        } else if (Tok.is(Token::assign)) {
+            advance(); // Move past `=`
+
+            // Parse the list of explicit values
+            while (true) {
+                E = parseExpr();
+                if (!E) {
+                    goto _error;
+                }
+                Values.push_back(E);
+
+                // Continue parsing more values if a comma is found
+                if (Tok.is(Token::comma)) {
+                    advance();
+                } else {
+                    break; // Stop when no more values
+                }
+            }
+            break; // Stop variable parsing after explicit values
         }
     }
 
-    if (expect(Token::semicolon)) goto _error;
+    if (expect(Token::semicolon)) {
+        goto _error;
+    }
+
+    // Assign default values for variables without explicit values
+    while (Values.size() < Vars.size()) {
+        Values.push_back(new Final(Final::Number, llvm::StringRef("0.0")));
+    }
+
+    // Ensure the number of values matches the number of variables
+    if (Values.size() != Vars.size()) {
+        llvm::errs() << "Number of variables and values do not match\n";
+        goto _error;
+    }
+
     return new DeclarationFloat(Vars, Values);
 
 _error:
