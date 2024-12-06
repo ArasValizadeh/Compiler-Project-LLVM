@@ -1,0 +1,3 @@
+const int x = 12;
+const in y = 10;
+const in z = x * y;

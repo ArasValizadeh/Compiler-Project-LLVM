@@ -1,0 +1,5 @@
+float z = min(10, 20);
+z = max(10, 20);
+z = mean(10, 20);
+z = sqrtN(9,2); //answer = 3
+

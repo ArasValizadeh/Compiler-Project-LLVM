@@ -1,0 +1,4 @@
+int x = 1;
+int y = 2;
+bool a = false;
+int z = a ? x : y;

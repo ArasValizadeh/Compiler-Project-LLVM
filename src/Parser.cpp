@@ -595,15 +595,15 @@ _error:
 
 Expr *Parser::parseExpr()
 {
+    // TODO
+    if (Tok.is(Token::questionmark)) { // Handle ternary operations
+        return parseTernary();
+    }
     Expr *Left = parseTerm();
 
     if (Left == nullptr)
     {
         goto _error;
-    }
-    // TODO
-    if (Tok.is(Token::questionmark)) { // Handle ternary operations
-        return parseTernary();
     }
     
     while (Tok.isOneOf(Token::plus, Token::minus))
@@ -805,7 +805,6 @@ _error:
         advance();
     return nullptr;
 }
-
 // TODO
 Expr *Parser::parseTernary() {
     Logic *Condition = nullptr;  // Ensure the condition is of type Logic*
@@ -1102,7 +1101,6 @@ _error:
         advance();
     return nullptr;
 }
-
 // TODO cast Parsing
 Expr *Parser::parseCastExpr() {
     if (!Tok.is(Token::ident)) return nullptr; // Expect a type identifier (e.g., "int")
@@ -1485,7 +1483,6 @@ BreakStmt *Parser::parseBreak() { //TODO
         llvm::errs() << "Expected ';' after 'break'\n";
         goto _error;
     }
-    advance();
 
     return new BreakStmt(getCurrentTokenLocation());
 

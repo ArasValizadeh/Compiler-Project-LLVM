@@ -271,8 +271,6 @@ public:
     
   };
 
-  
-
   virtual void visit(Comparison &Node) override {
     if(Node.getLeft()){
       Node.getLeft()->accept(*this);
@@ -493,21 +491,103 @@ public:
     LoopDepth--;
   }
 
-  virtual void visit(FunctionCall &Node) override {// TODO: add implementation
-    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
-        llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+  // virtual void visit(FunctionCall &Node) override {// TODO: add implementation
+  //   if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+  //       llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+  //       HasError = true;
+  //   }
+  //   for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
+  //       (*I)->accept(*this); // Check each argument expression
+  //   }
+  // }
+
+  // TODO: Implement missing virtual methods to make InputCheck concrete
+  virtual void visit(TernaryAssignment &Node) override {
+    // Validate the condition part of the ternary expression
+    Logic *Condition = Node.getCondition();
+    if (Condition) {
+        Condition->accept(*this); // Check the logic expression
+    } else {
+        llvm::errs() << "Ternary operation missing condition.\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate the true expression
+    Expr *TrueExpr = Node.getTrueExpr();
+    if (TrueExpr) {
+        TrueExpr->accept(*this); // Check the true expression
+    } else {
+        llvm::errs() << "Ternary operation missing 'true' branch expression.\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate the false expression
+    Expr *FalseExpr = Node.getFalseExpr();
+    if (FalseExpr) {
+        FalseExpr->accept(*this); // Check the false expression
+    } else {
+        llvm::errs() << "Ternary operation missing 'false' branch expression.\n";
+        HasError = true;
+        return;
+    }
+
+    // Type-check to ensure both branches are compatible
+    if (TrueExpr && FalseExpr) {
+        if (!isCompatibleType(TrueExpr, FalseExpr)) {
+            llvm::errs() << "Mismatched types in ternary operation: true branch is "
+                         << getType(TrueExpr) << ", false branch is " << getType(FalseExpr) << ".\n";
+            HasError = true;
+        }
+    }
+}
+
+  virtual void visit(DefaultStmt &Node) override { // TODO
+    // Validate that the default statement is inside a switch-case
+    if (SwitchDepth <= 0) {
+        llvm::errs() << "Error: 'default' statement not inside a switch-case.\n";
         HasError = true;
     }
 
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
-        (*I)->accept(*this); // Check each argument expression
+    // Visit all statements in the default body
+    for (AST *Stmt : Node.getBody()) {
+        if (Stmt) {
+            Stmt->accept(*this); // Recursively validate each statement
+        } else {
+            llvm::errs() << "Error: Null statement in 'default' body.\n";
+            HasError = true;
+        }
     }
-  }
+}
 
-  // TODO: Implement missing virtual methods to make InputCheck concrete
-  virtual void visit(TernaryAssignment &) override {} // TODO
-  virtual void visit(DefaultStmt &) override {} // TODO
-  virtual void visit(Cast &) override {} // TODO
+  virtual void visit(Cast &Node) override { // TODO
+    // Visit the expression being casted
+    Expr *ExprToCast = Node.getOperand();
+    if (ExprToCast) {
+        ExprToCast->accept(*this);
+    } else {
+        llvm::errs() << "Error: Missing expression in cast operation.\n";
+        HasError = true;
+        return;
+    }
+
+    // Convert TargetType to std::string
+    std::string TargetType = std::string(Node.getTargetType());
+    if (TargetType.empty()) {
+        llvm::errs() << "Error: Target type missing in cast operation.\n";
+        HasError = true;
+        return;
+    }
+
+    // Type compatibility check
+    std::string ExprType = getType(ExprToCast);
+    if (ExprType != TargetType) {
+        llvm::errs() << "Warning: Implicit cast from " << ExprType
+                     << " to " << TargetType << ". Ensure this is intended.\n";
+    }
+}
+ 
   virtual void visit(BreakStmt &Node) override { // TODO
     if (LoopDepth <= 0 && SwitchDepth <= 0) {
         llvm::errs() << "Error: 'break' statement not inside a loop or switch-case.\n";
@@ -516,6 +596,7 @@ public:
         locationError(Node.getLocation(), "'break' used outside of a loop or switch-case");
     }
   } 
+  
   virtual void visit(ContinueStmt &Node) override { // TODO
     if (LoopDepth <= 0) {
         llvm::errs() << "Error: 'continue' statement not inside a loop.\n";
@@ -523,6 +604,73 @@ public:
         locationError(Node.getLocation(), "'continue' used outside of a loop");
     }
   }
+
+  virtual void visit(FunctionCall &Node) override { // TODO
+    // Validate function existence
+    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+        llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate arguments
+    const auto &Args = Node.getArgs();
+    if (Args.empty()) {
+        llvm::errs() << "Function " << Node.getFuncName() << " requires arguments.\n";
+        HasError = true;
+        return;
+    }
+
+    if (Node.getFuncName() == "min" || Node.getFuncName() == "max") {
+        if (Args.size() < 2) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires at least two arguments.\n";
+            HasError = true;
+        }
+    } else if (Node.getFuncName() == "mean") {
+        if (Args.empty()) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires at least one argument.\n";
+            HasError = true;
+        }
+    } else if (Node.getFuncName() == "sqrtN") {
+        if (Args.size() != 1) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires exactly one argument.\n";
+            HasError = true;
+        }
+    }
+
+    // Validate each argument
+    for (Expr *Arg : Args) {
+        if (Arg) {
+            Arg->accept(*this);
+            std::string ArgType = getType(Arg);
+            if (ArgType != "int" && ArgType != "float") {
+                llvm::errs() << "Invalid argument type for function " << Node.getFuncName()
+                             << ": expected numeric type but got " << ArgType << ".\n";
+                HasError = true;
+            }
+        } else {
+            llvm::errs() << "Null argument in function " << Node.getFuncName() << ".\n";
+            HasError = true;
+        }
+    }
+}
+
+
+  bool isCompatibleType(Expr *Expr1, Expr *Expr2) { // TODO 
+    // Implement type compatibility logic based on your type system
+    // Example: Assume getType returns a string representation of the type
+    return getType(Expr1) == getType(Expr2);
+}
+  
+  
+std::string getType(Expr *Expression) {
+    if (Final *F = dynamic_cast<Final *>(Expression)) {
+        if (IntScope.find(F->getVal()) != IntScope.end()) return "int";
+        if (BoolScope.find(F->getVal()) != BoolScope.end()) return "bool";
+        if (FloatScope.find(F->getVal()) != FloatScope.end()) return "float";
+    }
+    return "unknown"; // Default fallback
+}
 
 
 };
