@@ -416,25 +416,89 @@ _error:
     return nullptr;
 }
 
-DeclarationVar *Parser::parseVarDec() { // TODO added for var type
-    Expr *E = nullptr;
-    llvm::StringRef Var;
+// DeclarationVar *Parser::parseVarDec() { // TODO added for var type
+//     Expr *E = nullptr;
+//     llvm::StringRef Var;
+
+//     if (expect(Token::KW_var)) goto _error;
+//     advance();
+
+//     if (expect(Token::ident)) goto _error;
+//     Var = Tok.getText();
+//     advance();
+
+//     if (expect(Token::assign)) goto _error;
+//     advance();
+
+//     E = parseExpr();
+//     if (!E) goto _error;
+
+//     if (expect(Token::semicolon)) goto _error;
+//     return new DeclarationVar(Var, E);
+
+// _error:
+//     while (Tok.getKind() != Token::eoi) advance();
+//     return nullptr;
+// }
+
+DeclarationVar *Parser::parseVarDec() { //TODO Updated for multiple variables with different types
+    llvm::SmallVector<llvm::StringRef> Vars;
+    llvm::SmallVector<Expr *> Values;
 
     if (expect(Token::KW_var)) goto _error;
     advance();
 
-    if (expect(Token::ident)) goto _error;
-    Var = Tok.getText();
-    advance();
+    while (true) {
+        if (expect(Token::ident)) {
+            goto _error;
+        }
+        Vars.push_back(Tok.getText());
+        advance();
 
-    if (expect(Token::assign)) goto _error;
-    advance();
+        // Stop processing if there are no more variables or assignments
+        if (!Tok.is(Token::comma) && !Tok.is(Token::assign)) {
+            break;
+        }
 
-    E = parseExpr();
-    if (!E) goto _error;
+        // Handle explicit assignments
+        if (Tok.is(Token::comma)) {
+            advance(); // Move to the next variable
+        } else if (Tok.is(Token::assign)) {
+            advance(); // Move past `=`
+
+            // Parse the list of explicit values
+            while (true) {
+                Expr *E = parseExpr();
+                if (!E) {
+                    goto _error;
+                }
+                Values.push_back(E);
+
+                // Continue parsing more values if a comma is found
+                if (Tok.is(Token::comma)) {
+                    advance();
+                } else {
+                    break; // Stop when no more values
+                }
+            }
+            break; // Stop variable parsing after explicit values
+        }
+    }
 
     if (expect(Token::semicolon)) goto _error;
-    return new DeclarationVar(Var, E);
+
+    // Assign default values for variables without explicit values
+    while (Values.size() < Vars.size()) {
+        Values.push_back(new Final(Final::Number, llvm::StringRef("0.0")));
+    }
+
+    // Ensure the number of values matches the number of variables
+    if (Values.size() != Vars.size()) {
+        llvm::errs() << "Number of variables and values do not match\n";
+        goto _error;
+    }
+
+    return new DeclarationVar(Vars, Values);
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();
@@ -724,6 +788,16 @@ Expr *Parser::parseFactor() {
             advance();
             break;
         }
+        case Token::KW_false: {
+            Left = new Final(Final::Bool, Tok.getText());
+            advance();
+            break;
+        }
+        case Token::KW_true: {
+            Left = new Final(Final::Bool, Tok.getText());
+            advance();
+            break;
+        }
         case Token::l_paren: {
             advance();
             Left = parseExpr();
@@ -734,6 +808,7 @@ Expr *Parser::parseFactor() {
             break;
         }
         default: {
+            //llvm errs 
             llvm::errs() << "balaye chaharomin error() dakhele parse factor\n";
             error();
             goto _error;

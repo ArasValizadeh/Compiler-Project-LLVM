@@ -7,3 +7,7 @@ bool aaa,bbb=false;
 float f1,f2,f3,f4,f5=1.0,2.0,3.0,4.0,5.0;
 float ff,gg=1.0;
 float hh,ii,jj;
+var mmm,nnn,ooo;
+var p,q,r=10,20.12,false;
+var v,w,xxxxxx=10,20;
+var yyyyy,zzzzz;

@@ -229,22 +229,25 @@ public:
 //     }
 // };
 
-class DeclarationVar : public Program { // TODO added for var type
+class DeclarationVar : public Program {
+public:
     using VarVector = llvm::SmallVector<llvm::StringRef>;
-    using ValueVector = llvm::SmallVector<AST *>;
+    using ValueVector = llvm::SmallVector<Expr *>;
+
+private:
     VarVector Vars;
     ValueVector Values;
+
 public:
-    DeclarationVar(llvm::StringRef Var, Expr* Value) 
-        : Vars({Var}), Values({Value}) {}
+    DeclarationVar(const VarVector &Vars, const ValueVector &Values) 
+        : Vars(Vars), Values(Values) {}
 
     VarVector::const_iterator varBegin() const { return Vars.begin(); }
     VarVector::const_iterator varEnd() const { return Vars.end(); }
     ValueVector::const_iterator valBegin() const { return Values.begin(); }
     ValueVector::const_iterator valEnd() const { return Values.end(); }
 
-    virtual void accept(ASTVisitor &V) override
-    {
+    virtual void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
 };
