@@ -3,3 +3,4 @@ int y = 29;
 bool q = false;
 int z;
 z = q ? x : y;
+int m = x > y ? true : false;

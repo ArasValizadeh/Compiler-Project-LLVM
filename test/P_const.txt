@@ -1,3 +1,4 @@
 const int x = 12;
-const in y = 10;
-const in z = x * y;
+const float y = 10.5;
+const bool z = false;
+const var m = 12;
