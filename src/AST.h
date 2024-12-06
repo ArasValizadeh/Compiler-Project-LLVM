@@ -255,17 +255,21 @@ public:
 // TODO
 //DeclarationConst represents a constant variable declaration
 class DeclarationConst : public Program { // TODO added for constant variables
-    llvm::StringRef Var;
-    Expr *Value;
+    llvm::StringRef Type; // The type of the constant (e.g., int, float, bool, var)
+    llvm::StringRef Var;  // The name of the constant
+    Expr *Value;          // The initializer expression for the constant
 
 public:
-    DeclarationConst(llvm::StringRef Var, Expr *Value) : Var(Var), Value(Value) {}
+    // Constructor to initialize the type, name, and value of the constant
+    DeclarationConst(llvm::StringRef Type, llvm::StringRef Var, Expr *Value) 
+        : Type(Type), Var(Var), Value(Value) {}
 
-    llvm::StringRef getConstName() { return Var; }
-    Expr *getInitializer() { return Value; }
+    llvm::StringRef getConstType() const { return Type; } // Get the type
+    llvm::StringRef getConstName() const { return Var; }  // Get the name
+    Expr *getInitializer() const { return Value; }        // Get the initializer
 
     virtual void accept(ASTVisitor &V) override {
-        V.visit(*this); // TODO: Add a visitor method for DeclarationConst
+        V.visit(*this); // Invoke the visitor's method for DeclarationConst
     }
 };
 

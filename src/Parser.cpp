@@ -505,12 +505,48 @@ _error:
     return nullptr;
 }
 
+// DeclarationConst *Parser::parseConstDec() { // TODO added for constant variables
+//     Expr *E = nullptr;
+//     llvm::StringRef Var;
+
+//     if (expect(Token::KW_const)) goto _error;
+//     advance();
+
+//     if (expect(Token::ident)) goto _error;
+//     Var = Tok.getText();
+//     advance();
+
+//     if (expect(Token::assign)) goto _error;
+//     advance();
+
+//     E = parseExpr();
+//     if (!E) goto _error;
+
+//     if (expect(Token::semicolon)) goto _error;
+//     return new DeclarationConst(Var, E);
+
+// _error:
+//     while (Tok.getKind() != Token::eoi) advance();
+//     return nullptr;
+// }
+
 DeclarationConst *Parser::parseConstDec() { // TODO added for constant variables
-    Expr *E = nullptr;
+    llvm::StringRef Type;
     llvm::StringRef Var;
+    Expr *E = nullptr;
 
     if (expect(Token::KW_const)) goto _error;
     advance();
+
+    // Check the type of the constant (int, float, bool, or var)
+    if (Tok.is(Token::KW_int) || Tok.is(Token::KW_float) || 
+        Tok.is(Token::KW_bool) || Tok.is(Token::KW_var)) {
+        Type = Tok.getText();
+        advance();
+    } else {
+        llvm::errs() << "Error: Expected a type (int, float, bool, var) after 'const'.\n";
+        goto _error;
+    }
 
     if (expect(Token::ident)) goto _error;
     Var = Tok.getText();
@@ -519,11 +555,15 @@ DeclarationConst *Parser::parseConstDec() { // TODO added for constant variables
     if (expect(Token::assign)) goto _error;
     advance();
 
-    E = parseExpr();
-    if (!E) goto _error;
+    E = parseExpr(); // Parse the initializer expression
+    if (!E) {
+        llvm::errs() << "Error: Expected an initializer for the constant.\n";
+        goto _error;
+    }
 
     if (expect(Token::semicolon)) goto _error;
-    return new DeclarationConst(Var, E);
+
+    return new DeclarationConst(Type, Var, E);
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();
