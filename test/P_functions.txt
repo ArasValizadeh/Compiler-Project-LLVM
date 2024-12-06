@@ -1,5 +1,5 @@
 float z = min(10, 20);
-z = max(10, 20);
-z = mean(10, 20);
-z = sqrtN(9,2); //answer = 3
+float m = max(10, 20);
+float n = mean(10, 20);
+float o = sqrtN(9,2);
 

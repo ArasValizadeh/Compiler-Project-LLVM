@@ -812,6 +812,11 @@ Expr *Parser::parseFactor() {
         return parseCastExpr(); // Handle casting
     }
 
+    // Handle function calls
+    if ((Tok.getText() == "min" || Tok.getText() == "max" || Tok.getText() == "sqrtN" || Tok.getText() == "mean")) {
+        return parseFunctionCall(); // Handle function calls
+    }
+
     switch (Tok.getKind()) {
         case Token::number: {
             Left = new Final(Final::Number, Tok.getText());
@@ -848,8 +853,7 @@ Expr *Parser::parseFactor() {
             break;
         }
         default: {
-            //llvm errs 
-            llvm::errs() << "balaye chaharomin error() dakhele parse factor\n";
+            llvm::errs() << "Error: Unexpected token in parse factor\n";
             error();
             goto _error;
         }
@@ -862,6 +866,66 @@ _error:
         advance();
     return nullptr;
 }
+
+// Expr *Parser::parseFactor() {
+//     Expr *Left = nullptr;
+
+//     // Handle casting expressions
+//     if (Tok.is(Token::ident) && 
+//         (Tok.getText() == "int" || Tok.getText() == "float" || Tok.getText() == "bool")) {
+//         return parseCastExpr(); // Handle casting
+//     }
+
+//     switch (Tok.getKind()) {
+//         case Token::number: {
+//             Left = new Final(Final::Number, Tok.getText());
+//             advance();
+//             break;
+//         }
+//         case Token::floatNumber: {
+//             Left = new Final(Final::FloatNumber, Tok.getText());
+//             advance();
+//             break;
+//         }
+//         case Token::ident: {
+//             Left = new Final(Final::Ident, Tok.getText());
+//             advance();
+//             break;
+//         }
+//         case Token::KW_false: {
+//             Left = new Final(Final::Bool, Tok.getText());
+//             advance();
+//             break;
+//         }
+//         case Token::KW_true: {
+//             Left = new Final(Final::Bool, Tok.getText());
+//             advance();
+//             break;
+//         }
+//         case Token::l_paren: {
+//             advance();
+//             Left = parseExpr();
+//             if (!consume(Token::r_paren)) {
+//                 llvm::errs() << "Expected ')' after expression\n";
+//                 goto _error;
+//             }
+//             break;
+//         }
+//         default: {
+//             //llvm errs 
+//             llvm::errs() << "balaye chaharomin error() dakhele parse factor\n";
+//             error();
+//             goto _error;
+//         }
+//     }
+
+//     return Left;
+
+// _error:
+//     while (Tok.getKind() != Token::eoi)
+//         advance();
+//     return nullptr;
+// }
 
 Expr *Parser::parseFinal()
 {
@@ -1406,32 +1470,41 @@ _error:
 }
 // TODO min, max, mean, sqrtN
 Expr *Parser::parseFunctionCall() {
-    llvm::SmallVector<Expr *> Args;
-    llvm::StringRef FuncName;
+    std::string FunctionName = Tok.getText().str(); // Store function name
+    advance(); // Move past the function name
 
-    if (!Tok.is(Token::ident)) return nullptr;
+    llvm::SmallVector<Expr *> Arguments; // Arguments list
 
-    FuncName = Tok.getText();
-    if (FuncName != "min" && FuncName != "max" && FuncName != "mean" && FuncName != "sqrtN")
-        return nullptr;
+    // Ensure the next token is '('
+    if (!Tok.is(Token::l_paren)) {
+        llvm::errs() << "Expected '(' after function name\n";
+        goto _error;
+    }
+    advance(); // Consume '('
 
-    advance();
-    if (expect(Token::l_paren)) goto _error;
-    advance();
+    // Parse arguments
+    if (!Tok.is(Token::r_paren)) { // Check if there are arguments
+        do {
+            Expr *Arg = parseExpr(); // Parse each argument
+            if (!Arg) {
+                llvm::errs() << "Expected an expression as an argument\n";
+                goto _error;
+            }
+            Arguments.push_back(Arg);
 
-    while (!Tok.is(Token::r_paren)) {
-        Expr *Arg = parseExpr();
-        if (!Arg) goto _error;
-        Args.push_back(Arg);
-
-        if (Tok.is(Token::comma)) advance();
-        else break;
+            if (!Tok.is(Token::comma)) break; // Break if no comma
+            advance(); // Consume comma
+        } while (true);
     }
 
-    if (expect(Token::r_paren)) goto _error;
-    advance();
+    // Ensure the next token is ')'
+    if (!Tok.is(Token::r_paren)) {
+        llvm::errs() << "Expected ')' after function arguments\n";
+        goto _error;
+    }
+    advance(); // Consume ')'
 
-    return new FunctionCall(FuncName, Args);
+    return new FunctionCall(FunctionName, Arguments); // Create function call AST node
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();

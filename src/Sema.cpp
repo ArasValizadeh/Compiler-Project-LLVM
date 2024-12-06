@@ -659,7 +659,7 @@ public:
             HasError = true;
         }
     } else if (Node.getFuncName() == "sqrtN") {
-        if (Args.size() != 1) {
+        if (Args.size() != 2) {
             llvm::errs() << "Function " << Node.getFuncName() << " requires exactly one argument.\n";
             HasError = true;
         }
