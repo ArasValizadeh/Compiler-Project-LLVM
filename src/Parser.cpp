@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "AST.h"
 
 
 // main point is that the whole input has been consumed
@@ -179,6 +180,7 @@ Program *Parser::parseProgram()
                 break;
             }
             default: {
+                llvm::errs() << "balaye avalin error() dakhele parse program\n";
                 error();
 
                 goto _error;
@@ -202,13 +204,13 @@ DeclarationInt *Parser::parseIntDec(){
     llvm::SmallVector<Expr *> Values;
     
     if (expect(Token::KW_int)){
-        llvm::errs() << "in parse int decleration\n";
+        llvm::errs() << "in parse int decleration keyword\n";
         goto _error;
     }
     advance();
     
     if (expect(Token::ident)){
-        llvm::errs() << "in parse int decleration\n";
+        llvm::errs() << "in parse int decleration identifier\n";
         goto _error;
     }
 
@@ -223,7 +225,7 @@ DeclarationInt *Parser::parseIntDec(){
             Values.push_back(E);
         }
         else{
-            llvm::errs() << "in parse int decleration\n";
+            llvm::errs() << "in parse int decleration assign\n";
             goto _error;
         }
     }
@@ -237,7 +239,7 @@ DeclarationInt *Parser::parseIntDec(){
     {
         advance();
         if (expect(Token::ident)){
-            llvm::errs() << "in parse int decleration\n";
+            llvm::errs() << "in parse int decleration after comma\n";
             goto _error;
         }
             
@@ -251,7 +253,7 @@ DeclarationInt *Parser::parseIntDec(){
                 Values.push_back(E);
             }
             else{
-                llvm::errs() << "in parse int decleration\n";
+                llvm::errs() << "in parse int decleration after comma and assign\n";
                 goto _error;
             }
         }
@@ -261,7 +263,7 @@ DeclarationInt *Parser::parseIntDec(){
     }
 
     if (expect(Token::semicolon)){
-        llvm::errs() << "in parse int decleration\n";
+        llvm::errs() << "in parse int decleration after semicolon\n";
         goto _error;
     }
 
@@ -460,7 +462,6 @@ DefineStmt *Parser::parseDefine() { // TODO added for #define macros
         goto _error;
     }
     MacroValue = Tok.getText();
-    advance();
 
     return new DefineStmt(MacroName, MacroValue);
 
@@ -613,6 +614,7 @@ Expr *Parser::parseExpr()
         else if (Tok.is(Token::minus))
             Op = BinaryOp::Minus;
         else {
+            llvm::errs() << "balaye dovomin error() dakhele parse expression\n";
             error();
 
             goto _error;
@@ -650,6 +652,7 @@ Expr *Parser::parseTerm()
         else if (Tok.is(Token::mod))
             Op = BinaryOp::Mod;
         else {
+            llvm::errs() << "balaye sevomin error() dakhele parse term\n";
             error();
 
             goto _error;
@@ -685,6 +688,11 @@ Expr *Parser::parseFactor() {
             advance();
             break;
         }
+        case Token::floatNumber: {
+            Left = new Final(Final::FloatNumber, Tok.getText());
+            advance();
+            break;
+        }
         case Token::ident: {
             Left = new Final(Final::Ident, Tok.getText());
             advance();
@@ -700,6 +708,7 @@ Expr *Parser::parseFactor() {
             break;
         }
         default: {
+            llvm::errs() << "balaye chaharomin error() dakhele parse factor\n";
             error();
             goto _error;
         }
@@ -720,6 +729,11 @@ Expr *Parser::parseFinal()
     {
     case Token::number:{
         Res = new Final(Final::Number, Tok.getText());
+        advance();
+        break;
+    }
+    case Token::floatNumber:{
+        Res = new Final(Final::FloatNumber, Tok.getText());
         advance();
         break;
     }
@@ -779,6 +793,7 @@ Expr *Parser::parseFinal()
         
     }
     default:{
+        llvm::errs() << "balaye panjomin error() dakhele parse final\n";
         error();
         goto _error;
     }
@@ -799,13 +814,17 @@ Expr *Parser::parseTernary() {
 
     Condition = parseLogic();  // Use parseLogic() to get a Logic* condition
     if (!Condition) goto _error;
+    advance();
 
     if (!consume(Token::questionmark)) goto _error;
+    advance();
 
     TrueExpr = parseExpr();
     if (!TrueExpr) goto _error;
+    advance();
 
     if (!consume(Token::colon)) goto _error;
+    advance();
 
     FalseExpr = parseExpr();
     if (!FalseExpr) goto _error;
@@ -913,6 +932,7 @@ Logic *Parser::parseLogic()
         else if (Tok.is(Token::KW_or))
             Op = LogicalExpr::Or;
         else {
+            llvm::errs() << "balaye sheshomin error() dakhele parse logic\n";
             error();
 
             goto _error;
@@ -1467,11 +1487,12 @@ BreakStmt *Parser::parseBreak() { //TODO
     }
     advance();
 
-    return new BreakStmt();
+    return new BreakStmt(getCurrentTokenLocation());
 
 _error:
     // Error handling: consume tokens until end-of-input or recovery point
     while (Tok.getKind() != Token::eoi) {
+        llvm::errs() << "it was at this moment that he knew he fucked up\n";
         advance();
     }
     return nullptr;
@@ -1492,7 +1513,7 @@ ContinueStmt *Parser::parseContinue() { // TODO
     }
     advance();
 
-    return new ContinueStmt();
+    return new ContinueStmt(getCurrentTokenLocation());
 
 _error:
     // Error handling: consume tokens until end-of-input or recovery point
@@ -1500,6 +1521,11 @@ _error:
         advance();
     }
     return nullptr;
+}
+
+Location Parser::getCurrentTokenLocation() {// TODO
+    // Assuming `Tok` contains current token details and has methods like `getLine()` and `getColumn()`
+    return Location(Tok.getLine(), Tok.getColumn());
 }
 
 void Parser::parseComment()
@@ -1616,6 +1642,7 @@ llvm::SmallVector<AST *> Parser::getBody()
         case Token::KW_break: { // TODO: Added for break
             BreakStmt *b = parseBreak();
             if (b) {
+                llvm::errs() << "inja ham miam ke agha sadra eshgh kone\n";
                 body.push_back(b);
             } else {
                 goto _error;

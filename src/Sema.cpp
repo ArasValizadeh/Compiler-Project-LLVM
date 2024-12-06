@@ -16,6 +16,18 @@ class InputCheck : public ASTVisitor {
 
   enum ErrorType { Twice, Not }; // Enum to represent error types: Twice - variable declared twice, Not - variable not declared
 
+  void locationError(const Location &Loc, llvm::StringRef Msg) {
+    llvm::errs() << "Error at Line " << Loc.Line
+                 << ", Column " << Loc.Column << ": " << Msg << "\n";
+    HasError = true;
+  }
+
+  
+  private:
+    int LoopDepth = 0; // TODO Counter for tracking loop depth
+    int SwitchDepth = 0; // TODO Tracks switch-case nesting level
+
+
   void error(ErrorType ET, llvm::StringRef V) {
     // Function to report errors
     llvm::errs() << "Variable " << V << " is "
@@ -52,12 +64,9 @@ public:
   virtual void visit(Final &Node) override {
     if (Node.getKind() == Final::Ident) {
       // Check if identifier is in the scope
-      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end()){
+      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end() && FloatScope.find(Node.getVal()) == FloatScope.end() && VarScope.find(Node.getVal()) == VarScope.end() && DefineScope.find(Node.getVal()) == DefineScope.end()){
         llvm::errs() << "node value is: " << Node.getVal() << " and it is of kind: " << Node.getKind() <<"\n";
 
-        // for (const auto &entry : IntScope) {
-        //   llvm::errs() << "IntScope contains: " << entry << "it's value is: " << entry.getVal() << "and it is of kind: " << entry.getKind() << "\n";
-        // }
         error(Not, Node.getVal());
       }
     }
@@ -196,6 +205,39 @@ public:
         llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
         HasError = true; 
       }
+      else if(FloatScope.find(*I) != FloatScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
+        HasError = true; 
+      }
+      else{
+        if (!IntScope.insert(*I).second)
+          error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
+      }
+    }
+  };
+
+  virtual void visit(DeclarationFloat &Node) override {
+    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I){
+      (*I)->accept(*this); // If the Declaration node has an expression, recursively visit the expression node
+    }
+    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
+         ++I) {
+      if(BoolScope.find(*I) != BoolScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
+        HasError = true; 
+      }
+      else if(IntScope.find(*I) != IntScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
+        HasError = true; 
+      }
       else{
         if (!IntScope.insert(*I).second)
           error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
@@ -209,8 +251,16 @@ public:
     }
     for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
          ++I) {
-      if(IntScope.find(*I) != IntScope.end()){
+      if(FloatScope.find(*I) != FloatScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
+        HasError = true; 
+      }
+      else if(IntScope.find(*I) != IntScope.end()){
         llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
         HasError = true; 
       }
       else{
@@ -220,6 +270,8 @@ public:
     }
     
   };
+
+  
 
   virtual void visit(Comparison &Node) override {
     if(Node.getLeft()){
@@ -241,7 +293,7 @@ public:
     if (Node.getOperator() != Comparison::True && Node.getOperator() != Comparison::False && Node.getOperator() != Comparison::Ident){
       Final* L = (Final*)(Node.getLeft());
       if(L){
-        if (L->getKind() == Final::ValueKind::Ident && IntScope.find(L->getVal()) == IntScope.end()) {
+        if (L->getKind() == Final::ValueKind::Ident && IntScope.find(L->getVal()) == IntScope.end() && FloatScope.find(L->getVal()) == FloatScope.end()) {
           llvm::errs() << "you can only compare a defined integer variable: "<< L->getVal() << "\n";
           HasError = true;
         } 
@@ -249,7 +301,7 @@ public:
       
       Final* R = (Final*)(Node.getRight());
       if(R){
-        if (R->getKind() == Final::ValueKind::Ident && IntScope.find(R->getVal()) == IntScope.end()) {
+        if (R->getKind() == Final::ValueKind::Ident && IntScope.find(R->getVal()) == IntScope.end() && FloatScope.find(R->getVal()) == FloatScope.end()) {
           llvm::errs() << "you can only compare a defined integer variable: "<< R->getVal() << "\n";
           HasError = true;
         } 
@@ -310,15 +362,20 @@ public:
   };
 
   virtual void visit(WhileStmt &Node) override {
+    LoopDepth++;
+
     Logic* l = Node.getCond();
     (*l).accept(*this);
 
     for (llvm::SmallVector<AST *>::const_iterator I = Node.begin(), E = Node.end(); I != E; ++I) {
       (*I)->accept(*this);
     }
+    LoopDepth--;
   };
 
   virtual void visit(ForStmt &Node) override {
+    LoopDepth++;
+
     Assignment *first = Node.getFirst();
     (*first).accept(*this);
 
@@ -337,26 +394,12 @@ public:
     for (llvm::SmallVector<AST *>::const_iterator I = Node.begin(), E = Node.end(); I != E; ++I) {
       (*I)->accept(*this);
     }
+
+    LoopDepth--;
   };
 
   virtual void visit(SignedNumber &Node) override {
   };
-
-  virtual void visit(DeclarationFloat &Node) override {// TODO: add implementation
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
-        (*I)->accept(*this); // Check initializer expressions
-    }
-
-    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E; ++I) {
-        if (IntScope.find(*I) != IntScope.end() || BoolScope.find(*I) != BoolScope.end()) {
-            llvm::errs() << "Variable " << *I << " is already declared as an integer or boolean." << "\n";
-            HasError = true;
-        } else {
-            if (!FloatScope.insert(*I).second)
-                error(Twice, *I); // Report "Twice" error if already declared
-        }
-    }
-  }
 
   virtual void visit(DeclarationVar &Node) override {// TODO: add implementation
     for (llvm::SmallVector<AST *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
@@ -394,6 +437,7 @@ public:
   }
 
   virtual void visit(SwitchStmt &Node) override {// TODO: add implementation
+    SwitchDepth++;
     Node.getCondition()->accept(*this); // Check switch condition
 
     llvm::StringSet<> CaseValues; // To track unique case values
@@ -415,19 +459,13 @@ public:
         Case->accept(*this); // Check case body
     }
 
-    // if (Node.hasDefault()) {
-    //     Node.getDefault()->accept(*this); // Check default body
-    // }
-    // if (!Node.getDefaultBody().empty()) { // TODO Check if default body exists. old changes are commented.
-    //   for (AST *Stmt : Node.getDefaultBody()) {
-    //       Stmt->accept(*this); // Visit each statement in the default body
-    //   } 
-    // }
     DefaultStmt *Default = Node.getDefault(); //TODO
     if (Default && !Default->getBody().empty()) { // Check if Default exists and its body is not empty
     for (AST *Stmt : Default->getBody()) {
         Stmt->accept(*this); // Visit each statement in the default body
-    } 
+    }
+
+    SwitchDepth--; 
 }
 
 
@@ -440,6 +478,7 @@ public:
   }
 
   virtual void visit(DoWhileStmt &Node) override {// TODO: add implementation
+    LoopDepth++;
     for (llvm::SmallVector<AST *>::const_iterator I = Node.getBody().begin(), E = Node.getBody().end(); I != E; ++I) {
         (*I)->accept(*this); // Check each statement in the body
     }
@@ -451,6 +490,7 @@ public:
         llvm::errs() << "Do-While loop must have a valid condition.\n";
         HasError = true;
     }
+    LoopDepth--;
   }
 
   virtual void visit(FunctionCall &Node) override {// TODO: add implementation
@@ -468,8 +508,21 @@ public:
   virtual void visit(TernaryAssignment &) override {} // TODO
   virtual void visit(DefaultStmt &) override {} // TODO
   virtual void visit(Cast &) override {} // TODO
-  virtual void visit(BreakStmt &) override {} // TODO
-  virtual void visit(ContinueStmt &) override {} // TODO
+  virtual void visit(BreakStmt &Node) override { // TODO
+    if (LoopDepth <= 0 && SwitchDepth <= 0) {
+        llvm::errs() << "Error: 'break' statement not inside a loop or switch-case.\n";
+        llvm::errs() << "At " << Node.getLocation() << "\n";
+        // Use a new function for Location-based error reporting
+        locationError(Node.getLocation(), "'break' used outside of a loop or switch-case");
+    }
+  } 
+  virtual void visit(ContinueStmt &Node) override { // TODO
+    if (LoopDepth <= 0) {
+        llvm::errs() << "Error: 'continue' statement not inside a loop.\n";
+        llvm::errs() << "At " << Node.getLocation() << "\n";
+        locationError(Node.getLocation(), "'continue' used outside of a loop");
+    }
+  }
 
 
 };

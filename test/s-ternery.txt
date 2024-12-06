@@ -1,3 +1,4 @@
 int x = 10;
 int y = 20;
+bool q = false;
 int z = (x > y) ? x : y;

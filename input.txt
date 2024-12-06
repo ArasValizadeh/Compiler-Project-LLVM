@@ -1,9 +1,7 @@
 int x = 10;
 int y = 20;
-if (x > y) {
-	print(x);
-} else if (x == y) {
-	print(x);
-} else {
-	print(x);
-}
+do{
+	x = 40;
+	break;
+	y = 21;
+}while(x > y);
