@@ -2,13 +2,13 @@ int x = 10;
 float y = 23.5;
 bool q = false;
 
-if(x > y && q){
+if(x > y){
 	q = true;
 }
-else if (y == x && q){
+else if (y == x){
 	q = true;
 }
-else if (true && q){
+else if (true and q){
 	q = true;
 }
 else {
