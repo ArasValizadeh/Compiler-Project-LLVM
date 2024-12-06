@@ -44,7 +44,7 @@ int main(int argc, const char **argv){
         llvm::errs() << "Semantic errors occurred\n"; // Report semantic errors
         return 1; // Exit with an error code
     }
-
+    llvm::errs() << "semantic is correct\n";
     // // Create a Code Generator object to translate the AST into LLVM IR
     // CodeGen CodeGenerator;
     // CodeGenerator.compile(Tree);

@@ -3,16 +3,16 @@ switch(a){
     case 1:
         a += 2;
         b = b * b * b;
-        break;
     case 2:
         a = 12;
         print(a);
         beark;
     default:
         d = d * 2;
-        break;
 }
 switch(b){
+    default:
+        print(b);
     case 1:
         a += 2;
         b = b * b * b;

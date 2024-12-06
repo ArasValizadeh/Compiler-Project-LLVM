@@ -3,6 +3,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 
 // Forward declarations of classes used in the AST
 class AST;
@@ -76,6 +77,23 @@ public:
   virtual void visit(BreakStmt &) = 0; // TODO added
   virtual void visit(ContinueStmt &) = 0; // TODO added
 };
+
+// TODO Define Location class or struct in AST.h for break and continue
+class Location {
+public:
+    int Line;
+    int Column;
+
+    Location(int l, int c) : Line(l), Column(c) {}
+
+   friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const Location &loc) {
+    os << llvm::Twine("Line ").concat(llvm::Twine(loc.Line))
+       .concat(", Column ")
+       .concat(llvm::Twine(loc.Column));
+    return os;
+  }
+};
+
 
 // AST class serves as the base class for all AST nodes
 class AST
@@ -557,6 +575,7 @@ public:
         V.visit(*this);
     }
 };
+
 class WhileStmt : public Program
 {
 using BodyVector = llvm::SmallVector<AST *>;
@@ -644,7 +663,6 @@ public:
         V.visit(*this); // Visit the default statement
     }
 };
-
 
 // TODO
 // SwitchStmt represents a switch-case construct in the AST
@@ -776,26 +794,33 @@ public:
 
 // TODO
 // BreakStmt class represents a break statement in the AST
-class BreakStmt : public Program {
-public:
-    BreakStmt() {}
+class BreakStmt : public AST { // TODO
+  Location Loca;
+
+  public:
+    explicit BreakStmt(Location Loc) : Loca(Loc) {}
+
+    Location getLocation() const { return Loca; }
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this);
     }
 };
 
+class ContinueStmt : public AST { // TODO
+  Location Loca;
 
-//TODO
-// ContinueStmt class represents a continue statement in the AST
-class ContinueStmt : public Program {
-public:
-    ContinueStmt() {}
+  public:
+    explicit ContinueStmt(Location Loc) : Loca(Loc) {}
+
+    Location getLocation() const { return Loca; }
 
     virtual void accept(ASTVisitor &V) override {
-        V.visit(*this);
+      V.visit(*this);
     }
 };
+
+
 class PrintStmt : public Program
 {
 private:
@@ -811,5 +836,6 @@ public:
     V.visit(*this);
   }
 };
+
 
 #endif

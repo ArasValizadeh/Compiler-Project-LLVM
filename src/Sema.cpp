@@ -16,6 +16,18 @@ class InputCheck : public ASTVisitor {
 
   enum ErrorType { Twice, Not }; // Enum to represent error types: Twice - variable declared twice, Not - variable not declared
 
+  void locationError(const Location &Loc, llvm::StringRef Msg) {
+    llvm::errs() << "Error at Line " << Loc.Line
+                 << ", Column " << Loc.Column << ": " << Msg << "\n";
+    HasError = true;
+  }
+
+  
+  private:
+    int LoopDepth = 0; // TODO Counter for tracking loop depth
+    int SwitchDepth = 0; // TODO Tracks switch-case nesting level
+
+
   void error(ErrorType ET, llvm::StringRef V) {
     // Function to report errors
     llvm::errs() << "Variable " << V << " is "
@@ -52,8 +64,11 @@ public:
   virtual void visit(Final &Node) override {
     if (Node.getKind() == Final::Ident) {
       // Check if identifier is in the scope
-      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end())
+      if (IntScope.find(Node.getVal()) == IntScope.end() && BoolScope.find(Node.getVal()) == BoolScope.end() && FloatScope.find(Node.getVal()) == FloatScope.end() && VarScope.find(Node.getVal()) == VarScope.end() && DefineScope.find(Node.getVal()) == DefineScope.end()){
+        llvm::errs() << "node value is: " << Node.getVal() << " and it is of kind: " << Node.getKind() <<"\n";
+
         error(Not, Node.getVal());
+      }
     }
   };
 
@@ -190,6 +205,39 @@ public:
         llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
         HasError = true; 
       }
+      else if(FloatScope.find(*I) != FloatScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
+        HasError = true; 
+      }
+      else{
+        if (!IntScope.insert(*I).second)
+          error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
+      }
+    }
+  };
+
+  virtual void visit(DeclarationFloat &Node) override {
+    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I){
+      (*I)->accept(*this); // If the Declaration node has an expression, recursively visit the expression node
+    }
+    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
+         ++I) {
+      if(BoolScope.find(*I) != BoolScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an boolean" << "\n";
+        HasError = true; 
+      }
+      else if(IntScope.find(*I) != IntScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
+        HasError = true; 
+      }
       else{
         if (!IntScope.insert(*I).second)
           error(Twice, *I); // If the insertion fails (element already exists in Scope), report a "Twice" error
@@ -203,8 +251,16 @@ public:
     }
     for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E;
          ++I) {
-      if(IntScope.find(*I) != IntScope.end()){
+      if(FloatScope.find(*I) != FloatScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an float" << "\n";
+        HasError = true; 
+      }
+      else if(IntScope.find(*I) != IntScope.end()){
         llvm::errs() << "Variable " << *I << " is already declared as an integer" << "\n";
+        HasError = true; 
+      }
+      if(VarScope.find(*I) != VarScope.end()){
+        llvm::errs() << "Variable " << *I << " is already declared as an variable" << "\n";
         HasError = true; 
       }
       else{
@@ -235,7 +291,7 @@ public:
     if (Node.getOperator() != Comparison::True && Node.getOperator() != Comparison::False && Node.getOperator() != Comparison::Ident){
       Final* L = (Final*)(Node.getLeft());
       if(L){
-        if (L->getKind() == Final::ValueKind::Ident && IntScope.find(L->getVal()) == IntScope.end()) {
+        if (L->getKind() == Final::ValueKind::Ident && IntScope.find(L->getVal()) == IntScope.end() && FloatScope.find(L->getVal()) == FloatScope.end()) {
           llvm::errs() << "you can only compare a defined integer variable: "<< L->getVal() << "\n";
           HasError = true;
         } 
@@ -243,7 +299,7 @@ public:
       
       Final* R = (Final*)(Node.getRight());
       if(R){
-        if (R->getKind() == Final::ValueKind::Ident && IntScope.find(R->getVal()) == IntScope.end()) {
+        if (R->getKind() == Final::ValueKind::Ident && IntScope.find(R->getVal()) == IntScope.end() && FloatScope.find(R->getVal()) == FloatScope.end()) {
           llvm::errs() << "you can only compare a defined integer variable: "<< R->getVal() << "\n";
           HasError = true;
         } 
@@ -304,15 +360,20 @@ public:
   };
 
   virtual void visit(WhileStmt &Node) override {
+    LoopDepth++;
+
     Logic* l = Node.getCond();
     (*l).accept(*this);
 
     for (llvm::SmallVector<AST *>::const_iterator I = Node.begin(), E = Node.end(); I != E; ++I) {
       (*I)->accept(*this);
     }
+    LoopDepth--;
   };
 
   virtual void visit(ForStmt &Node) override {
+    LoopDepth++;
+
     Assignment *first = Node.getFirst();
     (*first).accept(*this);
 
@@ -331,26 +392,12 @@ public:
     for (llvm::SmallVector<AST *>::const_iterator I = Node.begin(), E = Node.end(); I != E; ++I) {
       (*I)->accept(*this);
     }
+
+    LoopDepth--;
   };
 
   virtual void visit(SignedNumber &Node) override {
   };
-
-  virtual void visit(DeclarationFloat &Node) override {// TODO: add implementation
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
-        (*I)->accept(*this); // Check initializer expressions
-    }
-
-    for (llvm::SmallVector<llvm::StringRef>::const_iterator I = Node.varBegin(), E = Node.varEnd(); I != E; ++I) {
-        if (IntScope.find(*I) != IntScope.end() || BoolScope.find(*I) != BoolScope.end()) {
-            llvm::errs() << "Variable " << *I << " is already declared as an integer or boolean." << "\n";
-            HasError = true;
-        } else {
-            if (!FloatScope.insert(*I).second)
-                error(Twice, *I); // Report "Twice" error if already declared
-        }
-    }
-  }
 
   virtual void visit(DeclarationVar &Node) override {// TODO: add implementation
     for (llvm::SmallVector<AST *>::const_iterator I = Node.valBegin(), E = Node.valEnd(); I != E; ++I) {
@@ -388,6 +435,7 @@ public:
   }
 
   virtual void visit(SwitchStmt &Node) override {// TODO: add implementation
+    SwitchDepth++;
     Node.getCondition()->accept(*this); // Check switch condition
 
     llvm::StringSet<> CaseValues; // To track unique case values
@@ -409,19 +457,13 @@ public:
         Case->accept(*this); // Check case body
     }
 
-    // if (Node.hasDefault()) {
-    //     Node.getDefault()->accept(*this); // Check default body
-    // }
-    // if (!Node.getDefaultBody().empty()) { // TODO Check if default body exists. old changes are commented.
-    //   for (AST *Stmt : Node.getDefaultBody()) {
-    //       Stmt->accept(*this); // Visit each statement in the default body
-    //   } 
-    // }
     DefaultStmt *Default = Node.getDefault(); //TODO
     if (Default && !Default->getBody().empty()) { // Check if Default exists and its body is not empty
     for (AST *Stmt : Default->getBody()) {
         Stmt->accept(*this); // Visit each statement in the default body
-    } 
+    }
+
+    SwitchDepth--; 
 }
 
 
@@ -434,6 +476,7 @@ public:
   }
 
   virtual void visit(DoWhileStmt &Node) override {// TODO: add implementation
+    LoopDepth++;
     for (llvm::SmallVector<AST *>::const_iterator I = Node.getBody().begin(), E = Node.getBody().end(); I != E; ++I) {
         (*I)->accept(*this); // Check each statement in the body
     }
@@ -445,25 +488,189 @@ public:
         llvm::errs() << "Do-While loop must have a valid condition.\n";
         HasError = true;
     }
+    LoopDepth--;
   }
 
-  virtual void visit(FunctionCall &Node) override {// TODO: add implementation
-    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
-        llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+  // virtual void visit(FunctionCall &Node) override {// TODO: add implementation
+  //   if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+  //       llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+  //       HasError = true;
+  //   }
+  //   for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
+  //       (*I)->accept(*this); // Check each argument expression
+  //   }
+  // }
+
+  // TODO: Implement missing virtual methods to make InputCheck concrete
+  virtual void visit(TernaryAssignment &Node) override {
+    // Validate the condition part of the ternary expression
+    Logic *Condition = Node.getCondition();
+    if (Condition) {
+        Condition->accept(*this); // Check the logic expression
+    } else {
+        llvm::errs() << "Ternary operation missing condition.\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate the true expression
+    Expr *TrueExpr = Node.getTrueExpr();
+    if (TrueExpr) {
+        TrueExpr->accept(*this); // Check the true expression
+    } else {
+        llvm::errs() << "Ternary operation missing 'true' branch expression.\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate the false expression
+    Expr *FalseExpr = Node.getFalseExpr();
+    if (FalseExpr) {
+        FalseExpr->accept(*this); // Check the false expression
+    } else {
+        llvm::errs() << "Ternary operation missing 'false' branch expression.\n";
+        HasError = true;
+        return;
+    }
+
+    // Type-check to ensure both branches are compatible
+    if (TrueExpr && FalseExpr) {
+        if (!isCompatibleType(TrueExpr, FalseExpr)) {
+            llvm::errs() << "Mismatched types in ternary operation: true branch is "
+                         << getType(TrueExpr) << ", false branch is " << getType(FalseExpr) << ".\n";
+            HasError = true;
+        }
+    }
+}
+
+  virtual void visit(DefaultStmt &Node) override { // TODO
+    // Validate that the default statement is inside a switch-case
+    if (SwitchDepth <= 0) {
+        llvm::errs() << "Error: 'default' statement not inside a switch-case.\n";
         HasError = true;
     }
 
-    for (llvm::SmallVector<Expr *>::const_iterator I = Node.getArgs().begin(), E = Node.getArgs().end(); I != E; ++I) {
-        (*I)->accept(*this); // Check each argument expression
+    // Visit all statements in the default body
+    for (AST *Stmt : Node.getBody()) {
+        if (Stmt) {
+            Stmt->accept(*this); // Recursively validate each statement
+        } else {
+            llvm::errs() << "Error: Null statement in 'default' body.\n";
+            HasError = true;
+        }
+    }
+}
+
+  virtual void visit(Cast &Node) override { // TODO
+    // Visit the expression being casted
+    Expr *ExprToCast = Node.getOperand();
+    if (ExprToCast) {
+        ExprToCast->accept(*this);
+    } else {
+        llvm::errs() << "Error: Missing expression in cast operation.\n";
+        HasError = true;
+        return;
+    }
+
+    // Convert TargetType to std::string
+    std::string TargetType = std::string(Node.getTargetType());
+    if (TargetType.empty()) {
+        llvm::errs() << "Error: Target type missing in cast operation.\n";
+        HasError = true;
+        return;
+    }
+
+    // Type compatibility check
+    std::string ExprType = getType(ExprToCast);
+    if (ExprType != TargetType) {
+        llvm::errs() << "Warning: Implicit cast from " << ExprType
+                     << " to " << TargetType << ". Ensure this is intended.\n";
+    }
+}
+ 
+  virtual void visit(BreakStmt &Node) override { // TODO
+    if (LoopDepth <= 0 && SwitchDepth <= 0) {
+        llvm::errs() << "Error: 'break' statement not inside a loop or switch-case.\n";
+        llvm::errs() << "At " << Node.getLocation() << "\n";
+        // Use a new function for Location-based error reporting
+        locationError(Node.getLocation(), "'break' used outside of a loop or switch-case");
+    }
+  } 
+  
+  virtual void visit(ContinueStmt &Node) override { // TODO
+    if (LoopDepth <= 0) {
+        llvm::errs() << "Error: 'continue' statement not inside a loop.\n";
+        llvm::errs() << "At " << Node.getLocation() << "\n";
+        locationError(Node.getLocation(), "'continue' used outside of a loop");
     }
   }
 
-  // TODO: Implement missing virtual methods to make InputCheck concrete
-  virtual void visit(TernaryAssignment &) override {} // TODO
-  virtual void visit(DefaultStmt &) override {} // TODO
-  virtual void visit(Cast &) override {} // TODO
-  virtual void visit(BreakStmt &) override {} // TODO
-  virtual void visit(ContinueStmt &) override {} // TODO
+  virtual void visit(FunctionCall &Node) override { // TODO
+    // Validate function existence
+    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+        llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+        HasError = true;
+        return;
+    }
+
+    // Validate arguments
+    const auto &Args = Node.getArgs();
+    if (Args.empty()) {
+        llvm::errs() << "Function " << Node.getFuncName() << " requires arguments.\n";
+        HasError = true;
+        return;
+    }
+
+    if (Node.getFuncName() == "min" || Node.getFuncName() == "max") {
+        if (Args.size() < 2) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires at least two arguments.\n";
+            HasError = true;
+        }
+    } else if (Node.getFuncName() == "mean") {
+        if (Args.empty()) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires at least one argument.\n";
+            HasError = true;
+        }
+    } else if (Node.getFuncName() == "sqrtN") {
+        if (Args.size() != 1) {
+            llvm::errs() << "Function " << Node.getFuncName() << " requires exactly one argument.\n";
+            HasError = true;
+        }
+    }
+
+    // Validate each argument
+    for (Expr *Arg : Args) {
+        if (Arg) {
+            Arg->accept(*this);
+            std::string ArgType = getType(Arg);
+            if (ArgType != "int" && ArgType != "float") {
+                llvm::errs() << "Invalid argument type for function " << Node.getFuncName()
+                             << ": expected numeric type but got " << ArgType << ".\n";
+                HasError = true;
+            }
+        } else {
+            llvm::errs() << "Null argument in function " << Node.getFuncName() << ".\n";
+            HasError = true;
+        }
+    }
+}
+
+
+  bool isCompatibleType(Expr *Expr1, Expr *Expr2) { // TODO 
+    // Implement type compatibility logic based on your type system
+    // Example: Assume getType returns a string representation of the type
+    return getType(Expr1) == getType(Expr2);
+}
+  
+  
+std::string getType(Expr *Expression) {
+    if (Final *F = dynamic_cast<Final *>(Expression)) {
+        if (IntScope.find(F->getVal()) != IntScope.end()) return "int";
+        if (BoolScope.find(F->getVal()) != BoolScope.end()) return "bool";
+        if (FloatScope.find(F->getVal()) != FloatScope.end()) return "float";
+    }
+    return "unknown"; // Default fallback
+}
 
 
 };

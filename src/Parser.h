@@ -5,6 +5,7 @@
 #include "Lexer.h"
 #include "llvm/Support/raw_ostream.h"
 
+
 class Parser
 {
     Lexer &Lex;    // retrieve the next token from the input
@@ -77,6 +78,7 @@ class Parser
     ContinueStmt *parseContinue(); // TODO Parses 'continue' statements
     PrintStmt *parsePrint();
     Expr *parseCastExpr();  // TODO Handles casting expressions
+    Location getCurrentTokenLocation();
 
     void parseComment();
     void logRemainingTokens() const;

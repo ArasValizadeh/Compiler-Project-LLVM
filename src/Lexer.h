@@ -8,6 +8,8 @@
 class Lexer;
 
 class Token{
+    int Line; // TODO
+    int Column; // TODO
     friend class Lexer; // Grants the Lexer class access to Token's private members
 
 public:
@@ -87,6 +89,9 @@ private:
     llvm::StringRef Text;    // Textual representation of the token
 
 public:
+    int getLine() const { return Line; } //TODO
+
+    int getColumn() const { return Column; } //TODO
     // Accessor for the token's kind
     TokenKind getKind() const { return Kind; }
 

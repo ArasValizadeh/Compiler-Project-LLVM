@@ -1,0 +1,4 @@
+int a = 1;
+bool q = bool(a);
+float b = 12.3;
+int c = int(b);
