@@ -4,6 +4,10 @@
 # sh test.sh --file <filename>
 # sh test.sh --file <filename>
 
+sh build.sh
+sleep 1
+
+
 SHOW_LOG=false
 SPECIFIC_FILE=""
 

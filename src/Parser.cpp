@@ -807,8 +807,7 @@ Expr *Parser::parseFactor() {
     Expr *Left = nullptr;
 
     // Handle casting expressions
-    if (Tok.is(Token::ident) && 
-        (Tok.getText() == "int" || Tok.getText() == "float" || Tok.getText() == "bool")) {
+    if ((Tok.getText() == "int" || Tok.getText() == "float" || Tok.getText() == "bool")) {
         return parseCastExpr(); // Handle casting
     }
 
@@ -1248,9 +1247,8 @@ _error:
 }
 // TODO cast Parsing
 Expr *Parser::parseCastExpr() {
-    if (!Tok.is(Token::ident)) return nullptr; // Expect a type identifier (e.g., "int")
     llvm::StringRef TargetType = Tok.getText();
-    advance(); // Consume the type identifier
+    // advance(); // Consume the type identifier
 
     if (!consume(Token::l_paren)) {
         llvm::errs() << "Expected '(' after type in cast\n";
