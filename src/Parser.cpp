@@ -198,8 +198,6 @@ _error:
     return nullptr;
 }
 
-
-
 DeclarationInt *Parser::parseIntDec() {
     Expr *E = nullptr;
     llvm::SmallVector<llvm::StringRef> Vars;
@@ -419,23 +417,17 @@ _error:
 // DeclarationVar *Parser::parseVarDec() { // TODO added for var type
 //     Expr *E = nullptr;
 //     llvm::StringRef Var;
-
 //     if (expect(Token::KW_var)) goto _error;
 //     advance();
-
 //     if (expect(Token::ident)) goto _error;
 //     Var = Tok.getText();
 //     advance();
-
 //     if (expect(Token::assign)) goto _error;
 //     advance();
-
 //     E = parseExpr();
 //     if (!E) goto _error;
-
 //     if (expect(Token::semicolon)) goto _error;
 //     return new DeclarationVar(Var, E);
-
 // _error:
 //     while (Tok.getKind() != Token::eoi) advance();
 //     return nullptr;
@@ -508,23 +500,17 @@ _error:
 // DeclarationConst *Parser::parseConstDec() { // TODO added for constant variables
 //     Expr *E = nullptr;
 //     llvm::StringRef Var;
-
 //     if (expect(Token::KW_const)) goto _error;
 //     advance();
-
 //     if (expect(Token::ident)) goto _error;
 //     Var = Tok.getText();
 //     advance();
-
 //     if (expect(Token::assign)) goto _error;
 //     advance();
-
 //     E = parseExpr();
 //     if (!E) goto _error;
-
 //     if (expect(Token::semicolon)) goto _error;
 //     return new DeclarationConst(Var, E);
-
 // _error:
 //     while (Tok.getKind() != Token::eoi) advance();
 //     return nullptr;
@@ -725,10 +711,6 @@ _error:
 
 Expr *Parser::parseExpr()
 {
-    // TODO
-    if (Tok.is(Token::questionmark)) { // Handle ternary operations
-        return parseTernary();
-    }
     Expr *Left = parseTerm();
 
     if (Left == nullptr)
@@ -736,6 +718,10 @@ Expr *Parser::parseExpr()
         goto _error;
     }
     
+    // TODO
+    if (Tok.is(Token::questionmark)) { // Handle ternary operations
+        return parseTernary();
+    }
     while (Tok.isOneOf(Token::plus, Token::minus, Token::KW_xor))
     {
         BinaryOp::Operator Op;
@@ -1248,9 +1234,37 @@ _error:
     return nullptr;
 }
 // TODO cast Parsing
+// Expr *Parser::parseCastExpr() {
+//     llvm::StringRef TargetType = Tok.getText();
+//     advance(); // Consume the type identifier
+//     if (!consume(Token::l_paren)) {
+//         llvm::errs() << "Expected '(' after type in cast\n";
+//         return nullptr;
+//     }
+
+//     Expr *Operand = parseExpr();
+//     if (!Operand) {
+//         llvm::errs() << "Expected expression inside cast\n";
+//         return nullptr;
+//     }
+
+//     if (!consume(Token::r_paren)) {
+//         llvm::errs() << "Expected ')' after cast expression\n";
+//         return nullptr;
+//     }
+
+//     return new CastExpr(TargetType, Operand);
+// }
+
 Expr *Parser::parseCastExpr() {
     llvm::StringRef TargetType = Tok.getText();
-    // advance(); // Consume the type identifier
+
+    // Ensure that the type is valid and followed by '('
+    if (TargetType != "int" && TargetType != "float" && TargetType != "bool") {
+        llvm::errs() << "Expected valid type in cast expression\n";
+        return nullptr;
+    }
+    //advance(); // Consume the type identifier
 
     if (!consume(Token::l_paren)) {
         llvm::errs() << "Expected '(' after type in cast\n";
@@ -1409,47 +1423,99 @@ _error:
     return nullptr;
 }
 // TODO min, max, mean, sqrtN
+// Expr *Parser::parseFunctionCall() {
+//     std::string FunctionName = Tok.getText().str(); // Store function name
+//     advance(); // Move past the function name
+
+//     llvm::SmallVector<Expr *> Arguments; // Arguments list
+
+//     // Ensure the next token is '('
+//     if (!Tok.is(Token::l_paren)) {
+//         llvm::errs() << "Expected '(' after function name\n";
+//         goto _error;
+//     }
+//     advance(); // Consume '('
+
+//     // Parse arguments
+//     if (!Tok.is(Token::r_paren)) { // Check if there are arguments
+//         do {
+//             Expr *Arg = parseExpr(); // Parse each argument
+//             if (!Arg) {
+//                 llvm::errs() << "Expected an expression as an argument\n";
+//                 goto _error;
+//             }
+//             Arguments.push_back(Arg);
+
+//             if (!Tok.is(Token::comma)) break; // Break if no comma
+//             advance(); // Consume comma
+//         } while (true);
+//     }
+
+//     // Ensure the next token is ')'
+//     if (!Tok.is(Token::r_paren)) {
+//         llvm::errs() << "Expected ')' after function arguments\n";
+//         goto _error;
+//     }
+//     advance(); // Consume ')'
+
+//     return new FunctionCall(FunctionName, Arguments); // Create function call AST node
+
+// _error:
+//     while (Tok.getKind() != Token::eoi) advance();
+//     return nullptr;
+// }
 Expr *Parser::parseFunctionCall() {
-    std::string FunctionName = Tok.getText().str(); // Store function name
-    advance(); // Move past the function name
+    llvm::errs() << "Parsing function call, function name: " << Tok.getText() << "\n";
+std::string FunctionName = Tok.getText().str();
+llvm::errs() << "Captured function name: " << FunctionName << "\n";
 
-    llvm::SmallVector<Expr *> Arguments; // Arguments list
+    llvm::SmallVector<Expr *> Arguments;
 
-    // Ensure the next token is '('
-    if (!Tok.is(Token::l_paren)) {
+    if (!consume(Token::l_paren)) {
         llvm::errs() << "Expected '(' after function name\n";
         goto _error;
     }
-    advance(); // Consume '('
-
-    // Parse arguments
-    if (!Tok.is(Token::r_paren)) { // Check if there are arguments
-        do {
-            Expr *Arg = parseExpr(); // Parse each argument
-            if (!Arg) {
-                llvm::errs() << "Expected an expression as an argument\n";
-                goto _error;
-            }
-            Arguments.push_back(Arg);
-
-            if (!Tok.is(Token::comma)) break; // Break if no comma
-            advance(); // Consume comma
-        } while (true);
-    }
-
-    // Ensure the next token is ')'
-    if (!Tok.is(Token::r_paren)) {
-        llvm::errs() << "Expected ')' after function arguments\n";
+    advance();
+    advance();
+    // Expect the first float number
+    if (Tok.is(Token::floatNumber)) {
+        Arguments.push_back(new Final(Final::FloatNumber, Tok.getText()));
+        advance(); // Move to next token
+    } else {
+        llvm::errs() << "Expected a float number as the first argument, got: " << Tok.getText() << "\n";
         goto _error;
     }
-    advance(); // Consume ')'
 
-    return new FunctionCall(FunctionName, Arguments); // Create function call AST node
+    // Expect a comma
+    if (!Tok.is(Token::comma)) {
+        llvm::errs() << "Expected ',' after the first argument, got: " << Tok.getText() << "\n";
+        goto _error;
+    }
+    advance(); // Consume the comma
+
+    // Expect the second float number
+    if (Tok.is(Token::floatNumber)) {
+        Arguments.push_back(new Final(Final::FloatNumber, Tok.getText()));
+        advance(); // Move to next token
+    } else {
+        llvm::errs() << "Expected a float number as the second argument, got: " << Tok.getText() << "\n";
+        goto _error;
+    }
+
+    // Expect a closing parenthesis
+    if (!Tok.is(Token::r_paren)) {
+        llvm::errs() << "Expected ')' after the arguments, got: " << Tok.getText() << "\n";
+        goto _error;
+    }
+    advance(); // Consume the closing parenthesis
+
+    return new FunctionCall(FunctionName, Arguments);
 
 _error:
     while (Tok.getKind() != Token::eoi) advance();
     return nullptr;
 }
+
 
 PrintStmt *Parser::parsePrint()
 {

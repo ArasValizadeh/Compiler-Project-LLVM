@@ -721,6 +721,7 @@ public:
 class FunctionCall : public Expr { // TODO added for function calls like min(), max(), mean(), sqrtN()
     llvm::StringRef FuncName;
     llvm::SmallVector<Expr *> Args;
+    std::string ReturnType; // Add this member
 
 public:
     FunctionCall(llvm::StringRef FuncName, llvm::SmallVector<Expr *> Args)
@@ -728,6 +729,9 @@ public:
 
     llvm::StringRef getFuncName() { return FuncName; }
     llvm::SmallVector<Expr *> getArgs() { return Args; }
+
+    const std::string &getReturnType() const { return ReturnType; }
+    void setReturnType(const std::string &Type) { ReturnType = Type;}
 
     virtual void accept(ASTVisitor &V) override {
         V.visit(*this); // TODO: Add a visitor method for FunctionCall
