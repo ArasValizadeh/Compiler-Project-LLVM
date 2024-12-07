@@ -608,16 +608,50 @@ namespace ns
       }
     }
 
-    void visit(DeclarationVar &Node) override{  // TODO: Implement declaration var logic
-      Node.getInitializer()->accept(*this); // Visit initializer expression
-      Value *initializer = V;
+    virtual void visit(DeclarationVar &Node) override {
+    llvm::SmallVector<Value *, 8> vals;
 
-      Type *varType = initializer->getType();
-      AllocaInst *allocaInst = Builder.CreateAlloca(varType, nullptr, Node.getVar().str());
-
-      nameMapVar[Node.getVar()] = allocaInst;       // Add to the variable map
-      Builder.CreateStore(initializer, allocaInst); // Store the initializer
+    // Collect values for all variables in the declaration
+    llvm::SmallVector<Expr *, 8>::const_iterator ExprIt = Node.valBegin();
+    for (llvm::SmallVector<llvm::StringRef, 8>::const_iterator VarIt = Node.varBegin(), End = Node.varEnd(); VarIt != End; ++VarIt) {
+        if (ExprIt < Node.valEnd() && *ExprIt != nullptr) {
+            (*ExprIt)->accept(*this); // Visit the expression node to generate IR
+            vals.push_back(V);        // Store the resulting value
+        } else {
+            vals.push_back(Int32Zero); // Default to zero if no initializer is provided
+        }
+        ++ExprIt;
     }
+
+    // Process each variable and associate it with its corresponding value
+    llvm::SmallVector<Value *, 8>::const_iterator ValIt = vals.begin();
+    for (llvm::SmallVector<llvm::StringRef, 8>::const_iterator VarIt = Node.varBegin(), End = Node.varEnd(); VarIt != End; ++VarIt, ++ValIt) {
+        llvm::StringRef VarName = *VarIt;
+
+        // Determine the type of the initializer (dynamic typing)
+        Value *Initializer = *ValIt;
+        Type *VarType = Initializer->getType();
+
+        // Allocate memory dynamically based on the type of the initializer
+        AllocaInst *Alloca = Builder.CreateAlloca(VarType, nullptr, VarName);
+        nameMapVar[VarName] = Alloca; // Add the variable to the dynamic type map
+
+        // Store the initializer value in the allocated memory
+        if (Initializer) {
+            Builder.CreateStore(Initializer, Alloca);
+        } else {
+            // If the initializer is null, assign a default value (zero for integers, etc.)
+            if (VarType->isIntegerTy()) {
+                Builder.CreateStore(Int32Zero, Alloca);
+            } else if (VarType->isFloatingPointTy()) {
+                Builder.CreateStore(ConstantFP::get(VarType, 0.0), Alloca);
+            } else {
+                llvm::errs() << "Unsupported type for variable: " << VarName << "\n";
+            }
+        }
+    }
+}
+
 
     void visit(DeclarationConst &Node) override{ // TODO: Implement declaration const logic
       Node.getInitializer()->accept(*this); // Visit initializer expression

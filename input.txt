@@ -1,9 +1,13 @@
-int x = 10;
+int _x = 10;
 int y = 29;
 int z = x * y;
-if (z > x){
-	y = 12;
+
+switch(z){
+	case 39:
+		x = x + y;
+		break;
+	default:
+		x = x + y;
+		break;
 }
-else{
-	x = 20;
-}
+

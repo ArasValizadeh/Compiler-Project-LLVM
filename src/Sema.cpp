@@ -12,6 +12,8 @@ class InputCheck : public ASTVisitor {
   llvm::StringSet<> ConstScope; // TODO: add const scope
   llvm::StringSet<> DefineScope; // TODO: add define scope
   llvm::StringSet<> FunctionScope; // TODO: add function scope
+
+
   bool HasError; // Flag to indicate if an error occurred
 
   enum ErrorType { Twice, Not }; // Enum to represent error types: Twice - variable declared twice, Not - variable not declared
@@ -616,54 +618,130 @@ virtual void visit(DeclarationConst &Node) override {// TODO: add implementation
     }
   }
 
-  virtual void visit(FunctionCall &Node) override { // TODO
-    // Validate function existence
-    if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+//   virtual void visit(FunctionCall &Node) override { // TODO
+//     // Validate function existence
+
+//     if (FunctionScope.find(Node.getFuncName()) == FunctionScope.end()) {
+//         llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
+//         HasError = true;
+//         return;
+//     }
+
+//     // Validate arguments
+//     const auto &Args = Node.getArgs();
+//     if (Args.empty()) {
+//         llvm::errs() << "Function " << Node.getFuncName() << " requires arguments.\n";
+//         HasError = true;
+//         return;
+//     }
+
+//     llvm::errs() << "Function name: " << Node.getFuncName() << "\n";
+//     llvm::errs() << "Arguments count: " << Args.size() << "\n";
+//     for (size_t i = 0; i < Args.size(); ++i) {
+//       if (Args[i]) {
+//         llvm::errs() << "Arg[" << i << "]: Type = " << getType(Args[i]) << "\n";
+
+//         // Check if the argument is a literal (Final)
+//         if (auto *Literal = dynamic_cast<Final *>(Args[i])) {
+//             llvm::errs() << "Arg[" << i << "]: Text = " << Literal->getVal() << "\n";
+//         } 
+//         // Handle other expression types (optional)
+//         else if (auto *Binary = dynamic_cast<BinaryOp *>(Args[i])) {
+//             llvm::errs() << "Arg[" << i << "]: Binary operation\n";
+//         } 
+//         else if (auto *Cast = dynamic_cast<CastExpr *>(Args[i])) {
+//             llvm::errs() << "Arg[" << i << "]: Cast to " << Cast->getTargetType() << "\n";
+//         } 
+//         else {
+//             llvm::errs() << "Arg[" << i << "]: Unknown expression type\n";
+//         }
+//     } else {
+//         llvm::errs() << "Arg[" << i << "]: Null\n";
+//     }
+//     }
+
+//     if (Node.getFuncName() == "min" || Node.getFuncName() == "max") {
+//         if (Args.size() < 1) {
+//             llvm::errs() << "Function " << Node.getFuncName() << " requires at least two arguments.\n";
+//             HasError = true;
+//         }
+//     } else if (Node.getFuncName() == "mean") {
+//         if (Args.size() < 1) {
+//             llvm::errs() << "Function " << Node.getFuncName() << " requires at least one argument.\n";
+//             HasError = true;
+//         }
+//     } else if (Node.getFuncName() == "sqrtN") {
+//         if (Args.size() != 2) {
+//             llvm::errs() << "Function " << Node.getFuncName() << " requires exactly two argument.\n";
+//             HasError = true;
+//         }
+//     }
+
+//     // Validate each argument
+//     for (Expr *Arg : Args) {
+//         if (Arg) {
+//             Arg->accept(*this);
+//             std::string ArgType = getType(Arg);
+//             if (ArgType != "float") {
+//                 llvm::errs() << "Invalid argument type for function " << Node.getFuncName()
+//                              << ": expected numeric type but got " << ArgType << ".\n";
+//                 HasError = true;
+//             }
+//         } else {
+//             llvm::errs() << "Null argument in function " << Node.getFuncName() << ".\n";
+//             HasError = true;
+//         }
+//     }
+// }
+
+virtual void visit(FunctionCall &Node) override {
+    // Check for valid function names
+    if (Node.getFuncName() == "min" && Node.getFuncName() == "max" &&
+        Node.getFuncName() == "mean" && Node.getFuncName() == "sqrtN") {
         llvm::errs() << "Unknown function: " << Node.getFuncName() << "\n";
         HasError = true;
         return;
     }
 
-    // Validate arguments
+    // Validate argument count
     const auto &Args = Node.getArgs();
-    if (Args.empty()) {
-        llvm::errs() << "Function " << Node.getFuncName() << " requires arguments.\n";
+    if (Args.size() != 2) {
+        llvm::errs() << "Function " << Node.getFuncName() << " requires exactly two arguments.\n";
         HasError = true;
         return;
     }
 
-    if (Node.getFuncName() == "min" || Node.getFuncName() == "max") {
-        if (Args.size() < 2) {
-            llvm::errs() << "Function " << Node.getFuncName() << " requires at least two arguments.\n";
+    // Validate argument types
+    for (Expr *Arg : Args) {
+    if (Arg) {
+        Arg->accept(*this); // Recursively validate the argument
+        std::string ArgType = getType(Arg);
+
+        llvm::errs() << "Validating argument. Type detected: " << ArgType << "\n";
+        if (Node.getFuncName() != "sqrtN" && ArgType != "float") {
+            llvm::errs() << "Invalid argument type for function " << Node.getFuncName()
+                         << ": expected float but got " << ArgType << ".\n";
             HasError = true;
         }
-    } else if (Node.getFuncName() == "mean") {
-        if (Args.empty()) {
-            llvm::errs() << "Function " << Node.getFuncName() << " requires at least one argument.\n";
+        if (Node.getFuncName() == "sqrtN" && ArgType != "int") {
+            llvm::errs() << "Invalid argument type for function sqrtN: expected int but got " << ArgType << ".\n";
             HasError = true;
         }
-    } else if (Node.getFuncName() == "sqrtN") {
-        if (Args.size() != 2) {
-            llvm::errs() << "Function " << Node.getFuncName() << " requires exactly one argument.\n";
-            HasError = true;
-        }
+    } else {
+        llvm::errs() << "Null argument in function " << Node.getFuncName() << ".\n";
+        HasError = true;
+    }
+}
+
+
+    // Determine the return type based on the function
+    if (Node.getFuncName() == "sqrtN") {
+        Node.setReturnType("int"); // Special case for sqrtN
+    } else {
+        Node.setReturnType("float"); // Default return type for other functions
     }
 
-    // Validate each argument
-    for (Expr *Arg : Args) {
-        if (Arg) {
-            Arg->accept(*this);
-            std::string ArgType = getType(Arg);
-            if (ArgType != "int" && ArgType != "float") {
-                llvm::errs() << "Invalid argument type for function " << Node.getFuncName()
-                             << ": expected numeric type but got " << ArgType << ".\n";
-                HasError = true;
-            }
-        } else {
-            llvm::errs() << "Null argument in function " << Node.getFuncName() << ".\n";
-            HasError = true;
-        }
-    }
+    llvm::errs() << "Function " << Node.getFuncName() << " validated successfully.\n";
 }
 
 
@@ -674,14 +752,23 @@ virtual void visit(DeclarationConst &Node) override {// TODO: add implementation
 }
   
   
-std::string getType(Expr *Expression) {
-    if (Final *F = dynamic_cast<Final *>(Expression)) {
-        if (IntScope.find(F->getVal()) != IntScope.end()) return "int";
-        if (BoolScope.find(F->getVal()) != BoolScope.end()) return "bool";
-        if (FloatScope.find(F->getVal()) != FloatScope.end()) return "float";
+std::string getType(Expr *ExprNode) {
+    if (auto *FinalNode = dynamic_cast<Final *>(ExprNode)) {
+        switch (FinalNode->getKind()) {
+            case Final::FloatNumber:
+                return "float";
+            case Final::Number:
+                return "int";
+            case Final::Bool:
+                return "bool";
+            default:
+                return "unknown";
+        }
     }
-    return "unknown"; // Default fallback
+    return "unknown";
 }
+
+
 
 
 };
