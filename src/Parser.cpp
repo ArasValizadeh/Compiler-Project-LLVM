@@ -872,66 +872,6 @@ _error:
     return nullptr;
 }
 
-// Expr *Parser::parseFactor() {
-//     Expr *Left = nullptr;
-
-//     // Handle casting expressions
-//     if (Tok.is(Token::ident) && 
-//         (Tok.getText() == "int" || Tok.getText() == "float" || Tok.getText() == "bool")) {
-//         return parseCastExpr(); // Handle casting
-//     }
-
-//     switch (Tok.getKind()) {
-//         case Token::number: {
-//             Left = new Final(Final::Number, Tok.getText());
-//             advance();
-//             break;
-//         }
-//         case Token::floatNumber: {
-//             Left = new Final(Final::FloatNumber, Tok.getText());
-//             advance();
-//             break;
-//         }
-//         case Token::ident: {
-//             Left = new Final(Final::Ident, Tok.getText());
-//             advance();
-//             break;
-//         }
-//         case Token::KW_false: {
-//             Left = new Final(Final::Bool, Tok.getText());
-//             advance();
-//             break;
-//         }
-//         case Token::KW_true: {
-//             Left = new Final(Final::Bool, Tok.getText());
-//             advance();
-//             break;
-//         }
-//         case Token::l_paren: {
-//             advance();
-//             Left = parseExpr();
-//             if (!consume(Token::r_paren)) {
-//                 llvm::errs() << "Expected ')' after expression\n";
-//                 goto _error;
-//             }
-//             break;
-//         }
-//         default: {
-//             //llvm errs 
-//             llvm::errs() << "balaye chaharomin error() dakhele parse factor\n";
-//             error();
-//             goto _error;
-//         }
-//     }
-
-//     return Left;
-
-// _error:
-//     while (Tok.getKind() != Token::eoi)
-//         advance();
-//     return nullptr;
-// }
-
 Expr *Parser::parseFinal()
 {
     Expr *Res = nullptr;
