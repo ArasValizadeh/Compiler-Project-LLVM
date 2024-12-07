@@ -319,7 +319,8 @@ public:
     Mul,
     Div,
     Mod,
-    Exp
+    Exp,
+    Xor
   };
 
 private:

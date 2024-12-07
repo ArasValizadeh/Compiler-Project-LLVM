@@ -260,6 +260,9 @@ namespace ns
       case BinaryOp::Mod:
         V = Builder.CreateSRem(Left, Right);
         break;
+      case BinaryOp::Xor:
+        V = Builder.CreateXor(Left, Right, "xortmp"); // LLVM intrinsic for xor
+        break;
       case BinaryOp::Exp:
         V = CreateExp(Left, Right);
         break;

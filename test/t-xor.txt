@@ -1,0 +1,4 @@
+int a = 10;
+int b = 11;
+int c = a xor b;
+print(c);
