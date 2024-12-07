@@ -69,7 +69,7 @@ std::string getTokenName(Token::TokenKind kind) {
         case Token::KW_sqrtN: return "KW_sqrtN";
         case Token::colon: return "colon";
         case Token::KW_xor: return "KW_xor";
-        case Token::KW_not: return "KW_not";
+        case Token::KW_not_in: return "KW_not_in";
         case Token::questionmark: return "questionmark";
         case Token::KW_in: return "KW_in";
         case Token::l_squarebracket: return "l_squarebracket";
@@ -116,6 +116,7 @@ namespace charinfo
     }
 }
 
+
 void Lexer::next(Token &token) {
     while (*BufferPtr && charinfo::isWhitespace(*BufferPtr)) {
         ++BufferPtr;
@@ -138,8 +139,8 @@ void Lexer::next(Token &token) {
             kind = Token::KW_bool;
         else if (Name == "xor")            // TODO
             kind = Token::KW_xor;
-        else if (Name == "not")             // TODO
-            kind = Token::KW_not;
+        else if (Name == "not") 
+            kind = Token::KW_not_in;             // TODO
         else if (Name == "in")              // TODO
             kind = Token::KW_in;
         else if (Name == "float")               // TODO added for float type

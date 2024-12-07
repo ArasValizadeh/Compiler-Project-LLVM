@@ -1,0 +1,7 @@
+int a = 10;
+if(a in [1, 2, 3, 4, 5]){
+    print(a);
+}
+if(a not in [1, 2, 3, 4, 5]){
+    print(a);
+}

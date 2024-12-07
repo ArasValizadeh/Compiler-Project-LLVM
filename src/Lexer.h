@@ -74,7 +74,7 @@ public:
         KW_sqrtN,       // Keyword 'sqrtN' // TODO added for sqrtN function 56
         colon,          // ':' (for switch-case statements) //TODO added for switch-case statements 57
         KW_xor,         // Keyword xor // TODO 58
-        KW_not,         // Keyword not // TODO 59
+        KW_not_in,         // Keyword not // TODO 59
         questionmark, //  ? // TODO 60
         KW_in, //  in // TODO 61
         l_squarebracket, //  [ // TODO 62

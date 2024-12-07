@@ -320,7 +320,9 @@ public:
     Div,
     Mod,
     Exp,
-    Xor
+    Xor,
+    In,      // Added for 'in'
+    NotIn    // Added for 'not in'
   };
 
 private:

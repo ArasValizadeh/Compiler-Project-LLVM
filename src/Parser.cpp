@@ -745,7 +745,11 @@ Expr *Parser::parseExpr()
             Op = BinaryOp::Minus;
         else if (Tok.is(Token::KW_xor))
             Op = BinaryOp::Xor; // Handle xor
-        else {
+        else if (Tok.is(Token::KW_in)) {
+            Op = BinaryOp::In;
+        } else if (Tok.is(Token::KW_not_in)) {
+            Op = BinaryOp::NotIn;
+        } else {
             llvm::errs() << "balaye dovomin error() dakhele parse expression\n";
             error();
 
